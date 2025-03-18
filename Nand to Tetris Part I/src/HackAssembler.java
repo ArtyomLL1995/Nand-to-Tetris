@@ -219,9 +219,9 @@ public class HackAssembler {
 
     public static void main(String[] args) throws Exception {
         // Source .asm file path
-        String sourceFilePath = "Nand to Tetris Part I/Mult.asm";
+        String sourceFilePath = "Mult.asm";
         // Destination .hack file path
-        String destinationFilePath = "Nand to Tetris Part I/Mult.hack";
+        String destinationFilePath = "Mult.hack";
 
         // Call the method to copy the file
         firstPass(sourceFilePath);
