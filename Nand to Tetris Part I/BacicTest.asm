@@ -1,5 +1,5 @@
-// push constant 10
-@10
+// push constant 43
+@43
 D=A
 @SP
 A=M
@@ -7,13 +7,10 @@ M=D
 @SP
 M=M+1
 
-// pop local 2
+// pop pointer 0
 @SP
 M=M-1
-@2
-D=A
-@LCL
-A=D+M
+@R3
 D=A
 @R13
 M=D

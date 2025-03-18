@@ -20,19 +20,18 @@ public class VMTranslator {
     public static final List<String> pushArgumentCommands = Arrays.asList("D=A","@ARG","A=D+M","D=M");
     public static final List<String> pushThisCommands = Arrays.asList("D=A","@THIS","A=D+M","D=M");
     public static final List<String> pushThatCommands = Arrays.asList("D=A","@THAT","A=D+M","D=M");
-    public static final List<String> pushTempCommands = Arrays.asList("D=A","","D=M");
+    public static final List<String> pushTempCommands = Arrays.asList("","D=M");
     public static final List<String> pushStaticCommands = Arrays.asList("","D=M");
-
-    public static final List<String> pushPointerCommands = Arrays.asList("D=A","@R3","A=D+A","D=M");
+    public static final List<String> pushPointerCommands = Arrays.asList("","D=M");
 
     public static final Map<String, List<String>> pushCommandsMap = Map.of(
         "constant", pushConstantCommands,
+        "pointer", pushPointerCommands,
         "local", pushLocalCommands,
         "argument", pushArgumentCommands,
         "this", pushThisCommands,
         "that", pushThatCommands,
         "temp", pushTempCommands,
-        "pointer", pushPointerCommands,
         "static", pushStaticCommands
     );
 
@@ -43,12 +42,18 @@ public class VMTranslator {
     public static final List<String> popArgumentCommands = Arrays.asList("D=A","@ARG","A=D+M","D=A","@R13","M=D");
     public static final List<String> popThisCommands = Arrays.asList("D=A","@THIS","A=D+M","D=A","@R13","M=D");
     public static final List<String> popThatCommands = Arrays.asList("D=A","@THAT","A=D+M","D=A","@R13","M=D");
+    public static final List<String> popTempCommands = Arrays.asList("","D=A","@R13","M=D");
+    public static final List<String> popStaticCommands = Arrays.asList("","D=A","@R13","M=D");
+    public static final List<String> popPointerCommands = Arrays.asList("","D=A","@R13","M=D");
 
     public static final Map<String, List<String>> popCommandsMap = Map.of(
+        "pointer", popPointerCommands,
         "local", popLocalCommands,
         "argument", popArgumentCommands,
         "this", popThisCommands,
-        "that", popThatCommands
+        "that", popThatCommands,
+        "temp", popTempCommands,
+        "static", popStaticCommands
     );
 
     public static void secondPass(String sourceFile, String destinationFile) {
@@ -92,9 +97,13 @@ public class VMTranslator {
                 pushStaticCommands.set(0, "@" + currentFileName + "." + index);
             } else {
                 if (memorySegment.equals("temp")) {
-                    pushTempCommands.set(1, "@R" + (Integer.parseInt(index) + 5));
+                    pushTempCommands.set(0, "@R" + (Integer.parseInt(index) + 5));
+                } else if (memorySegment.equals("pointer")) {
+                    Integer pointerIndex = Integer.parseInt(index) == 0 ? 3 : 4;
+                    pushPointerCommands.set(0,"@R" + pointerIndex);
+                } else {
+                    result += "@" + index + "\n";
                 }
-                result += "@" + index + "\n";
             }
             for (String pushCommand : pushCommandsMap.get(memorySegment)) {
                 result += pushCommand + "\n";
@@ -104,11 +113,21 @@ public class VMTranslator {
             }
 
         } else if (line.indexOf("pop") == 0) {
-
+            if (memorySegment.equals("static")) {
+                popStaticCommands.set(0, "@" + currentFileName + "." + index);
+            } else {
+                if (memorySegment.equals("temp")) {
+                    popTempCommands.set(0, "@R" + (Integer.parseInt(index) + 5));
+                } else if (memorySegment.equals("pointer")) {
+                    Integer pointerIndex = Integer.parseInt(index) == 0 ? 3 : 4;
+                    popPointerCommands.set(0,"@R" + pointerIndex);
+                } else {
+                    result += "@" + index + "\n";
+                }
+            }
             for (String commonCommand : commonStartPopCommands) {
                 result += commonCommand + "\n";
             }
-            result += "@" + index + "\n";
             for(String popCommand : popCommandsMap.get(memorySegment)) {
                 result += popCommand + "\n";
             }
@@ -128,25 +147,5 @@ public class VMTranslator {
         String destinationFilePath = "BacicTest.asm";
         secondPass(sourceFilePath, destinationFilePath);
     }
-
-    // pop local 5
-
-    // @SP
-    // M=M-1
-    
-    // @5
-    // D=A
-    // @LCL
-    // A=D+M
-    // D=A
-    // @R13
-    // M=D
-
-    // @SP
-    // A=M
-    // D=M
-    // @R13
-    // A=M
-    // M=D
     
 }

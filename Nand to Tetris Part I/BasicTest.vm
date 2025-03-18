@@ -5,9 +5,8 @@
 
 // Executes pop and push commands.
 
-push constant 10
-pop local 2
-
+push constant 43
+pop pointer 0
 
 
 
