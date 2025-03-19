@@ -48,8 +48,6 @@ public class VMTranslator {
     public static final List<String> popStaticCommands = Arrays.asList("","D=A","@R13","M=D");
     public static final List<String> popPointerCommands = Arrays.asList("","D=A","@R13","M=D");
 
-    
-
     public static final Map<String, List<String>> popCommandsMap = Map.of(
         "pointer", popPointerCommands,
         "local", popLocalCommands,
