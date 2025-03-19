@@ -3,9 +3,7 @@ import java.io.BufferedWriter;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.Map;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -37,16 +35,16 @@ public class VMTranslator {
         "static", pushStaticCommands
     );
 
-    public static final List<String> commonStartPopCommands = Arrays.asList("@SP","M=M-1");
-    public static final List<String> commonEndPopCommands = Arrays.asList("@SP","A=M","D=M","@R13","A=M","M=D");
+    public static final List<String> popLocalCommands = Arrays.asList("D=A","@LCL","D=D+M","@R13","M=D"); // +
+    public static final List<String> popArgumentCommands = Arrays.asList("D=A","@ARG","D=D+M","@R13","M=D"); // +
+    public static final List<String> popThisCommands = Arrays.asList("D=A","@THIS","D=D+M","@R13","M=D"); // +
+    public static final List<String> popThatCommands = Arrays.asList("D=A","@THAT","D=D+M","@R13","M=D"); // +
+    public static final List<String> popTempCommands = Arrays.asList("@SP","AM=M-1","D=M","","M=D"); // +
 
-    public static final List<String> popLocalCommands = Arrays.asList("D=A","@LCL","A=D+M","D=A","@R13","M=D");
-    public static final List<String> popArgumentCommands = Arrays.asList("D=A","@ARG","A=D+M","D=A","@R13","M=D");
-    public static final List<String> popThisCommands = Arrays.asList("D=A","@THIS","A=D+M","D=A","@R13","M=D");
-    public static final List<String> popThatCommands = Arrays.asList("D=A","@THAT","A=D+M","D=A","@R13","M=D");
-    public static final List<String> popTempCommands = Arrays.asList("","D=A","@R13","M=D");
     public static final List<String> popStaticCommands = Arrays.asList("","D=A","@R13","M=D");
     public static final List<String> popPointerCommands = Arrays.asList("","D=A","@R13","M=D");
+
+    public static final List<String> commonPopEndCommands = Arrays.asList("@SP","AM=M-1","D=M","@R13","A=M","M=D"); // +
 
     public static final Map<String, List<String>> popCommandsMap = Map.of(
         "pointer", popPointerCommands,
@@ -58,7 +56,8 @@ public class VMTranslator {
         "static", popStaticCommands
     );
 
-    public static void secondPass(String sourceFile, String destinationFile) {
+    public static void secondPass(String sourceFile) {
+        String destinationFile = sourceFile.replace(".vm", ".asm");
         try (
             // FileReader and BufferedReader to read the .asm file
             BufferedReader reader = new BufferedReader(new FileReader(sourceFile));
@@ -90,6 +89,7 @@ public class VMTranslator {
     public static String processLine(String line) {
 
         String result = "// " + line + "\n";
+
         String[] parts = line.split(" ");
         
         if (line.indexOf("push") == 0) {
@@ -123,25 +123,16 @@ public class VMTranslator {
 
             if (memorySegment.equals("static")) {
                 popStaticCommands.set(0, "@" + currentFileName + "." + index);
+            } else if (memorySegment.equals("temp")) {
+                popTempCommands.set(3,"@R" + (Integer.parseInt(index) + 5));
+            } else if (memorySegment.equals("pointer")) {
+                Integer pointerIndex = Integer.parseInt(index) == 0 ? 3 : 4;
+                popPointerCommands.set(0,"@R" + pointerIndex);
             } else {
-                if (memorySegment.equals("temp")) {
-                    popTempCommands.set(0, "@R" + (Integer.parseInt(index) + 5));
-                } else if (memorySegment.equals("pointer")) {
-                    Integer pointerIndex = Integer.parseInt(index) == 0 ? 3 : 4;
-                    popPointerCommands.set(0,"@R" + pointerIndex);
-                } else {
-                    result += "@" + index + "\n";
-                }
+                result += "@" + index + "\n";
             }
-            for (String commonCommand : commonStartPopCommands) {
-                result += commonCommand + "\n";
-            }
-            for(String popCommand : popCommandsMap.get(memorySegment)) {
-                result += popCommand + "\n";
-            }
-            for (String commonCommand : commonEndPopCommands) {
-                result += commonCommand + "\n";
-            }
+
+            result += generatePopASMCommand(memorySegment);
 
         } else if (line.indexOf("add") == 0) {
             for (String addCommand : addCommands) {
@@ -157,24 +148,68 @@ public class VMTranslator {
             }
         } else if (line.indexOf("eq") == 0) {
             for (String eqCommand : eqCommands) {
-                eqCommands.set(6, "@NOTEQUAL" + lineNumber);
-                eqCommands.set(13, "(NOTEQUAL" + lineNumber + ')');
+                eqCommands.set(6, "@NOT_EQUAL_ZERO" + lineNumber);
+                eqCommands.set(13, "(NOT_EQUAL_ZERO" + lineNumber + ')');
                 eqCommands.set(11, "@END" + lineNumber);
                 eqCommands.set(17, "(END" + lineNumber + ')');
                 result += eqCommand + "\n";
+            }
+        } else if (line.indexOf("gt") == 0) {
+            for (String gtCommand : gtCommands) {
+                gtCommands.set(6, "@LESS_OR_EQUAL_ZERO" + lineNumber);
+                gtCommands.set(13, "(LESS_OR_EQUAL_ZERO" + lineNumber + ')');
+                gtCommands.set(11, "@END" + lineNumber);
+                gtCommands.set(17, "(END" + lineNumber + ')');
+                result += gtCommand + "\n";
+            }
+        } else if (line.indexOf("lt") == 0) {
+            for (String ltCommand : ltCommands) {
+                ltCommands.set(6, "@GREAT_OR_EQUAL_ZERO" + lineNumber);
+                ltCommands.set(13, "(GREAT_OR_EQUAL_ZERO" + lineNumber + ')');
+                ltCommands.set(11, "@END" + lineNumber);
+                ltCommands.set(17, "(END" + lineNumber + ')');
+                result += ltCommand + "\n";
+            }
+        } else if (line.indexOf("and") == 0) {
+            for (String andCommand : andCommands) {
+                result += andCommand + "\n";
+            }
+        } else if (line.indexOf("or") == 0) {
+            for (String orCommand : orCommands) {
+                result += orCommand + "\n";
+            }
+        } else if (line.indexOf("not") == 0) {
+            for (String notCommand : notCommands) {
+                result += notCommand + "\n";
             }
         }
 
         return result;
     }
 
-    public static void main(String[] args) throws Exception {
-        secondPass(args[0], args[1]);
+    private static String generatePopASMCommand(String memorySegment) {
+        String result = "";
+        for(String popCommand : popCommandsMap.get(memorySegment)) {
+            result += popCommand + "\n";
+        }
+        if (!memorySegment.equals("temp")) {
+            for (String commonPopCommand : commonPopEndCommands) {
+                result += commonPopCommand + "\n";
+            }
+        }
+        return result;
     }
 
-    public static final List<String> addCommands = Arrays.asList("@SP","M=M-1","A=M","D=M","A=A-1","M=D+M");
-    public static final List<String> subCommands = Arrays.asList("@SP","M=M-1","A=M","D=M","A=A-1","M=M-D");
-    public static final List<String> negCommands = Arrays.asList("@SP","M=M-1","A=M","M=-M","@SP","M=M+1");
+    public static void main(String[] args) throws Exception {
+        secondPass(args[0]);
+    }
+
+    public static final List<String> addCommands = Arrays.asList("@SP","AM=M-1","D=M","A=A-1","M=D+M");
+    public static final List<String> andCommands = Arrays.asList("@SP","AM=M-1","D=M","A=A-1","M=D&M");
+    public static final List<String> orCommands = Arrays.asList("@SP","AM=M-1","D=M","A=A-1","M=D|M");
+    public static final List<String> notCommands = Arrays.asList("@SP","A=M-1","M=!M");
+    public static final List<String> subCommands = Arrays.asList("@SP","AM=M-1","D=M","A=A-1","M=M-D");
+    public static final List<String> negCommands = Arrays.asList("@SP","AM=M-1","M=-M","@SP","M=M+1");
     public static final List<String> eqCommands = Arrays.asList(
     "@SP",
         "AM=M-1",
@@ -182,14 +217,14 @@ public class VMTranslator {
         "@SP",
         "AM=M-1",
         "D=M-D",
-        "", // @NOTEQUAL 6
+        "", // @NOT_EQUAL_ZERO 6
         "D;JNE",
         "@SP",
         "A=M",
         "M=-1",
         "", // @END 11
         "0;JMP",
-        "", // (NOTEQUAL) 13
+        "", // (NOT_EQUAL_ZERO) 13
         "@SP",
         "A=M",
         "M=0",
@@ -198,4 +233,49 @@ public class VMTranslator {
         "AM=M+1"
     );
 
+    public static final List<String> gtCommands = Arrays.asList(
+    "@SP",
+        "AM=M-1",
+        "D=M",
+        "@SP",
+        "AM=M-1",
+        "D=M-D",
+        "", // @LESS_OR_EQUAL_ZERO 6
+        "D;JLE",
+        "@SP",
+        "A=M",
+        "M=-1",
+        "", // @END 11
+        "0;JMP",
+        "", // (LESS_OR_EQUAL_ZERO) 13
+        "@SP",
+        "A=M",
+        "M=0",
+        "", // (END)17
+        "@SP",
+        "AM=M+1"
+    );
+
+    public static final List<String> ltCommands = Arrays.asList(
+    "@SP",
+        "AM=M-1",
+        "D=M",
+        "@SP",
+        "AM=M-1",
+        "D=M-D",
+        "", // @GREAT_OR_EQUAL_ZERO 6
+        "D;JGE",
+        "@SP",
+        "A=M",
+        "M=-1",
+        "", // @END 11
+        "0;JMP",
+        "", // (GREAT_OR_EQUAL_ZERO) 13
+        "@SP",
+        "A=M",
+        "M=0",
+        "", // (END)17
+        "@SP",
+        "AM=M+1"
+    );
 }
