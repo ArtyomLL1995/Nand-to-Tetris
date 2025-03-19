@@ -11,6 +11,8 @@ import java.util.List;
 
 public class VMTranslator {
 
+    public static Integer lineNumber = 0;
+
     public static String currentFileName = "test";
 
     public static final List<String> commonPushCommands = Arrays.asList("@SP","A=M","M=D","@SP","M=M+1");
@@ -46,6 +48,8 @@ public class VMTranslator {
     public static final List<String> popStaticCommands = Arrays.asList("","D=A","@R13","M=D");
     public static final List<String> popPointerCommands = Arrays.asList("","D=A","@R13","M=D");
 
+    
+
     public static final Map<String, List<String>> popCommandsMap = Map.of(
         "pointer", popPointerCommands,
         "local", popLocalCommands,
@@ -75,6 +79,7 @@ public class VMTranslator {
                 if (commentIndex != -1) {
                     line = line.substring(0, commentIndex).trim(); // Keep only the instruction
                 }
+                lineNumber++;
                 String processedLine = processLine(line);
                 writer.write(processedLine);
                 writer.newLine();
@@ -88,10 +93,11 @@ public class VMTranslator {
 
         String result = "// " + line + "\n";
         String[] parts = line.split(" ");
-        String memorySegment = parts[1];
-        String index = parts[2];
-
+        
         if (line.indexOf("push") == 0) {
+
+            String memorySegment = parts[1];
+            String index = parts[2];
 
             if (memorySegment.equals("static")) {
                 pushStaticCommands.set(0, "@" + currentFileName + "." + index);
@@ -113,6 +119,10 @@ public class VMTranslator {
             }
 
         } else if (line.indexOf("pop") == 0) {
+
+            String memorySegment = parts[1];
+            String index = parts[2];
+
             if (memorySegment.equals("static")) {
                 popStaticCommands.set(0, "@" + currentFileName + "." + index);
             } else {
@@ -135,17 +145,59 @@ public class VMTranslator {
                 result += commonCommand + "\n";
             }
 
+        } else if (line.indexOf("add") == 0) {
+            for (String addCommand : addCommands) {
+                result += addCommand + "\n";
+            }
+        } else if (line.indexOf("sub") == 0) {
+            for (String subCommand : subCommands) {
+                result += subCommand + "\n";
+            }
+        } else if (line.indexOf("neg") == 0) {
+            for (String negCommand : negCommands) {
+                result += negCommand + "\n";
+            }
+        } else if (line.indexOf("eq") == 0) {
+            for (String eqCommand : eqCommands) {
+                eqCommands.set(6, "@NOTEQUAL" + lineNumber);
+                eqCommands.set(13, "(NOTEQUAL" + lineNumber + ')');
+                eqCommands.set(11, "@END" + lineNumber);
+                eqCommands.set(17, "(END" + lineNumber + ')');
+                result += eqCommand + "\n";
+            }
         }
 
         return result;
     }
 
     public static void main(String[] args) throws Exception {
-        // Source .asm file path
-        String sourceFilePath = "BasicTest.vm";
-        // Destination .hack file path
-        String destinationFilePath = "BacicTest.asm";
-        secondPass(sourceFilePath, destinationFilePath);
+        secondPass(args[0], args[1]);
     }
-    
+
+    public static final List<String> addCommands = Arrays.asList("@SP","M=M-1","A=M","D=M","A=A-1","M=D+M");
+    public static final List<String> subCommands = Arrays.asList("@SP","M=M-1","A=M","D=M","A=A-1","M=M-D");
+    public static final List<String> negCommands = Arrays.asList("@SP","M=M-1","A=M","M=-M","@SP","M=M+1");
+    public static final List<String> eqCommands = Arrays.asList(
+    "@SP",
+        "AM=M-1",
+        "D=M",
+        "@SP",
+        "AM=M-1",
+        "D=M-D",
+        "", // @NOTEQUAL 6
+        "D;JNE",
+        "@SP",
+        "A=M",
+        "M=-1",
+        "", // @END 11
+        "0;JMP",
+        "", // (NOTEQUAL) 13
+        "@SP",
+        "A=M",
+        "M=0",
+        "", // (END)17
+        "@SP",
+        "AM=M+1"
+    );
+
 }
