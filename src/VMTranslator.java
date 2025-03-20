@@ -9,22 +9,22 @@ import java.util.List;
 
 public class VMTranslator {
 
-    public static Integer lineNumber = 0;
+    private static Integer lineNumber = 0;
 
-    public static String currentFileName = "test";
+    private static String currentFileName = "test";
 
-    public static final List<String> commonPushCommands = Arrays.asList("@SP","A=M","M=D","@SP","M=M+1");
+    private static final List<String> commonPushCommands = Arrays.asList("@SP","A=M","M=D","@SP","M=M+1");
 
-    public static final List<String> pushConstantCommands = Arrays.asList("D=A");
-    public static final List<String> pushLocalCommands = Arrays.asList("D=A","@LCL","A=D+M","D=M");
-    public static final List<String> pushArgumentCommands = Arrays.asList("D=A","@ARG","A=D+M","D=M");
-    public static final List<String> pushThisCommands = Arrays.asList("D=A","@THIS","A=D+M","D=M");
-    public static final List<String> pushThatCommands = Arrays.asList("D=A","@THAT","A=D+M","D=M");
-    public static final List<String> pushTempCommands = Arrays.asList("","D=M");
-    public static final List<String> pushStaticCommands = Arrays.asList("","D=M");
-    public static final List<String> pushPointerCommands = Arrays.asList("","D=M");
+    private static final List<String> pushConstantCommands = Arrays.asList("D=A");
+    private static final List<String> pushLocalCommands = Arrays.asList("D=A","@LCL","A=D+M","D=M");
+    private static final List<String> pushArgumentCommands = Arrays.asList("D=A","@ARG","A=D+M","D=M");
+    private static final List<String> pushThisCommands = Arrays.asList("D=A","@THIS","A=D+M","D=M");
+    private static final List<String> pushThatCommands = Arrays.asList("D=A","@THAT","A=D+M","D=M");
+    private static final List<String> pushTempCommands = Arrays.asList("","D=M");
+    private static final List<String> pushStaticCommands = Arrays.asList("","D=M");
+    private static final List<String> pushPointerCommands = Arrays.asList("","D=M");
 
-    public static final Map<String, List<String>> pushCommandsMap = Map.of(
+    private static final Map<String, List<String>> pushCommandsMap = Map.of(
         "constant", pushConstantCommands,
         "pointer", pushPointerCommands,
         "local", pushLocalCommands,
@@ -35,18 +35,18 @@ public class VMTranslator {
         "static", pushStaticCommands
     );
 
-    public static final List<String> popLocalCommands = Arrays.asList("D=A","@LCL","D=D+M","@R13","M=D"); // +
-    public static final List<String> popArgumentCommands = Arrays.asList("D=A","@ARG","D=D+M","@R13","M=D"); // +
-    public static final List<String> popThisCommands = Arrays.asList("D=A","@THIS","D=D+M","@R13","M=D"); // +
-    public static final List<String> popThatCommands = Arrays.asList("D=A","@THAT","D=D+M","@R13","M=D"); // +
-    public static final List<String> popTempCommands = Arrays.asList("@SP","AM=M-1","D=M","","M=D"); // +
+    private static final List<String> popLocalCommands = Arrays.asList("D=A","@LCL","D=D+M","@R13","M=D"); // +
+    private static final List<String> popArgumentCommands = Arrays.asList("D=A","@ARG","D=D+M","@R13","M=D"); // +
+    private static final List<String> popThisCommands = Arrays.asList("D=A","@THIS","D=D+M","@R13","M=D"); // +
+    private static final List<String> popThatCommands = Arrays.asList("D=A","@THAT","D=D+M","@R13","M=D"); // +
+    private static final List<String> popTempCommands = Arrays.asList("@SP","AM=M-1","D=M","","M=D"); // +
 
-    public static final List<String> popStaticCommands = Arrays.asList("","D=A","@R13","M=D");
-    public static final List<String> popPointerCommands = Arrays.asList("","D=A","@R13","M=D");
+    private static final List<String> popStaticCommands = Arrays.asList("","D=A","@R13","M=D");
+    private static final List<String> popPointerCommands = Arrays.asList("","D=A","@R13","M=D");
 
-    public static final List<String> commonPopEndCommands = Arrays.asList("@SP","AM=M-1","D=M","@R13","A=M","M=D"); // +
+    private static final List<String> commonPopEndCommands = Arrays.asList("@SP","AM=M-1","D=M","@R13","A=M","M=D"); // +
 
-    public static final Map<String, List<String>> popCommandsMap = Map.of(
+    private static final Map<String, List<String>> popCommandsMap = Map.of(
         "pointer", popPointerCommands,
         "local", popLocalCommands,
         "argument", popArgumentCommands,
@@ -56,7 +56,7 @@ public class VMTranslator {
         "static", popStaticCommands
     );
 
-    public static void secondPass(String sourceFile) {
+    private static void secondPass(String sourceFile) {
         String destinationFile = sourceFile.replace(".vm", ".asm");
         try (
             // FileReader and BufferedReader to read the .asm file
@@ -86,7 +86,7 @@ public class VMTranslator {
         }
     }
 
-    public static String processLine(String line) {
+    private static String processLine(String line) {
 
         String result = "// " + line + "\n";
 
@@ -182,8 +182,19 @@ public class VMTranslator {
             for (String notCommand : notCommands) {
                 result += notCommand + "\n";
             }
+        } else if (line.indexOf("label") == 0) {
+            result += "(" + parts[1] + ")" + "\n";
+        } else if (line.indexOf("if-goto") == 0) {
+            ifGotoCommands.set(3, "@"+parts[1]);
+            for (String ifGotoCommand : ifGotoCommands) {
+                result += ifGotoCommand + "\n";
+            }
+        } else if (line.indexOf("goto") == 0) {
+            gotoCommands.set(0, "@"+parts[1]);
+            for (String gotoCommand : gotoCommands) {
+                result += gotoCommand + "\n";
+            }
         }
-
         return result;
     }
 
@@ -204,13 +215,13 @@ public class VMTranslator {
         secondPass(args[0]);
     }
 
-    public static final List<String> addCommands = Arrays.asList("@SP","AM=M-1","D=M","A=A-1","M=D+M");
-    public static final List<String> andCommands = Arrays.asList("@SP","AM=M-1","D=M","A=A-1","M=D&M");
-    public static final List<String> orCommands = Arrays.asList("@SP","AM=M-1","D=M","A=A-1","M=D|M");
-    public static final List<String> notCommands = Arrays.asList("@SP","A=M-1","M=!M");
-    public static final List<String> subCommands = Arrays.asList("@SP","AM=M-1","D=M","A=A-1","M=M-D");
-    public static final List<String> negCommands = Arrays.asList("@SP","AM=M-1","M=-M","@SP","M=M+1");
-    public static final List<String> eqCommands = Arrays.asList(
+    private static final List<String> addCommands = Arrays.asList("@SP","AM=M-1","D=M","A=A-1","M=D+M");
+    private static final List<String> andCommands = Arrays.asList("@SP","AM=M-1","D=M","A=A-1","M=D&M");
+    private static final List<String> orCommands = Arrays.asList("@SP","AM=M-1","D=M","A=A-1","M=D|M");
+    private static final List<String> notCommands = Arrays.asList("@SP","A=M-1","M=!M");
+    private static final List<String> subCommands = Arrays.asList("@SP","AM=M-1","D=M","A=A-1","M=M-D");
+    private static final List<String> negCommands = Arrays.asList("@SP","AM=M-1","M=-M","@SP","M=M+1");
+    private static final List<String> eqCommands = Arrays.asList(
     "@SP",
         "AM=M-1",
         "D=M",
@@ -233,7 +244,7 @@ public class VMTranslator {
         "AM=M+1"
     );
 
-    public static final List<String> gtCommands = Arrays.asList(
+    private static final List<String> gtCommands = Arrays.asList(
     "@SP",
         "AM=M-1",
         "D=M",
@@ -256,7 +267,7 @@ public class VMTranslator {
         "AM=M+1"
     );
 
-    public static final List<String> ltCommands = Arrays.asList(
+    private static final List<String> ltCommands = Arrays.asList(
     "@SP",
         "AM=M-1",
         "D=M",
@@ -278,4 +289,15 @@ public class VMTranslator {
         "@SP",
         "AM=M+1"
     );
+    private static final List<String> ifGotoCommands = Arrays.asList("@SP","AM=M-1","D=M","","D;JNE");
+    private static final List<String> gotoCommands = Arrays.asList("","0;JMP");
+
+    // go-to LABEL
+
+    // @SP
+    // A=M-1
+    // D=M
+    // @LABEL
+    // D;JNE
+
 }
