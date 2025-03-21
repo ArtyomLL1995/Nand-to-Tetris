@@ -77,7 +77,7 @@ public class VMTranslator {
                     line = line.substring(0, commentIndex).trim(); // Keep only the instruction
                 }
                 lineNumber++;
-                String processedLine = processLine(line);
+                String processedLine = processLine(line, lineNumber);
                 writer.write(processedLine);
                 writer.newLine();
             }
@@ -86,7 +86,7 @@ public class VMTranslator {
         }
     }
 
-    private static String processLine(String line) {
+    private static String processLine(String line, Integer lineNumber) {
 
         String result = "// " + line + "\n";
 
@@ -194,6 +194,23 @@ public class VMTranslator {
             for (String gotoCommand : gotoCommands) {
                 result += gotoCommand + "\n";
             }
+        } else if (line.indexOf("function") == 0) {
+            result += "(" + parts[1] + ")" + "\n";
+            for (Integer i = 0; i < Integer.parseInt(parts[2]); i++) {
+                result += "@SP\nA=M\nM=0\n@SP\nM=M+1\n";
+            }
+        } else if (line.indexOf("call") == 0) {
+            callNewFunctionCommands.set(callNewFunctionCommands.size()-1,"(ReturAddress_"+parts[1]+lineNumber + ")");
+            callNewFunctionCommands.set(0,"@ReturAddress_"+parts[1]+lineNumber);
+            callNewFunctionCommands.set(callNewFunctionCommands.size()-3,"@"+parts[1]);
+            callNewFunctionCommands.set(callNewFunctionCommands.size()-15,"@"+parts[2]);
+            for (String callFuncCommand : callNewFunctionCommands) {
+                result += callFuncCommand + "\n";
+            }
+        } else if (line.indexOf("return") == 0) {
+            for (String returnFuncCommand : returnNewFunctionCommands) {
+                result += returnFuncCommand + "\n";
+            }
         }
         return result;
     }
@@ -289,15 +306,127 @@ public class VMTranslator {
         "@SP",
         "AM=M+1"
     );
+
     private static final List<String> ifGotoCommands = Arrays.asList("@SP","AM=M-1","D=M","","D;JNE");
     private static final List<String> gotoCommands = Arrays.asList("","0;JMP");
 
-    // go-to LABEL
+    private static final List<String> callNewFunctionCommands = Arrays.asList(
+        // Saving current return address into the stack
+        "", // this label name assigned dynamically based on caller's name
+        "D=A",
+        "@SP",
+        "A=M",
+        "M=D",
+        "@SP",
+        "M=M+1",
+        // Saving LCL to the stack
+        "@LCL",
+        "D=M",
+        "@SP",
+        "A=M",
+        "M=D",
+        "@SP",
+        "M=M+1",
+        // Saving ARG to the stack
+        "@ARG",
+        "D=M",
+        "@SP",
+        "A=M",
+        "M=D",
+        "@SP",
+        "M=M+1",
+        // Saving THIS to the stack
+        "@THIS",
+        "D=M",
+        "@SP",
+        "A=M",
+        "M=D",
+        "@SP",
+        "M=M+1",
+        // Saving THAT to the stack
+        "@THAT",
+        "D=M",
+        "@SP",
+        "A=M",
+        "M=D",
+        "@SP",
+        "M=M+1",
+        // repositioning ARG (for new function context)
+        "", // this changed dynamically depending in the number of args
+        "D=A",
+        "@5",
+        "D=D+A",
+        "@SP",
+        "D=M-D",
+        "@ARG",
+        "M=D",
+        // repositioning LCL (for new function context)
+        "@SP",
+        "D=M",
+        "@LCL",
+        "M=D",
+        // jumping to called function
+        "", // function name assigned dynamically based on callee's name
+        "0;JMP",
+        "" //this label name assigned dynamically based on caller's name 
+    );
 
-    // @SP
-    // A=M-1
-    // D=M
-    // @LABEL
-    // D;JNE
-
+    private static final List<String> returnNewFunctionCommands = Arrays.asList(
+        // Get endFrame (current LCL) and Return Address
+    "@LCL",
+        "D=M",
+        "@R13",
+        "M=D",
+        "@5",
+        "A=D-A",
+        "D=M",
+        "@R14",
+        "M=D",
+        // Set return result into ARG and set SP next to new return result
+        "@SP",
+        "AM=M-1",
+        "D=M",
+        "@ARG",
+        "A=M",
+        "M=D",
+        "D=A+1",
+        "@SP",
+        "M=D",
+        // Restoring LCL
+        "@4",
+        "D=A",
+        "@R13",
+        "A=M-D",
+        "D=M",
+        "@LCL",
+        "M=D",
+        // Restoring ARG
+        "@3",
+        "D=A",
+        "@R13",
+        "A=M-D",
+        "D=M",
+        "@ARG",
+        "M=D",
+        // Restoring THIS
+        "@2",
+        "D=A",
+        "@R13",
+        "A=M-D",
+        "D=M",
+        "@THIS",
+        "M=D",
+        // Restoring THAT
+        "@1",
+        "D=A",
+        "@R13",
+        "A=M-D",
+        "D=M",
+        "@THAT",
+        "M=D",
+        // goto returnAddress
+        "@R14",
+        "A=M",
+        "0;JMP"
+    );
 }
