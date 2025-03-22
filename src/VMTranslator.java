@@ -6,87 +6,100 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.Arrays;
 import java.util.List;
+import java.io.File;
 
 public class VMTranslator {
 
     private static Integer lineNumber = 0;
 
-    private static String currentFileName = "test";
+    private static String currentFileName;
 
-    private static final List<String> commonPushCommands = Arrays.asList("@SP","A=M","M=D","@SP","M=M+1");
-
-    private static final List<String> pushConstantCommands = Arrays.asList("D=A");
-    private static final List<String> pushLocalCommands = Arrays.asList("D=A","@LCL","A=D+M","D=M");
-    private static final List<String> pushArgumentCommands = Arrays.asList("D=A","@ARG","A=D+M","D=M");
-    private static final List<String> pushThisCommands = Arrays.asList("D=A","@THIS","A=D+M","D=M");
-    private static final List<String> pushThatCommands = Arrays.asList("D=A","@THAT","A=D+M","D=M");
     private static final List<String> pushTempCommands = Arrays.asList("","D=M");
     private static final List<String> pushStaticCommands = Arrays.asList("","D=M");
     private static final List<String> pushPointerCommands = Arrays.asList("","D=M");
 
     private static final Map<String, List<String>> pushCommandsMap = Map.of(
-        "constant", pushConstantCommands,
+        "constant", Arrays.asList("D=A"),
         "pointer", pushPointerCommands,
-        "local", pushLocalCommands,
-        "argument", pushArgumentCommands,
-        "this", pushThisCommands,
-        "that", pushThatCommands,
+        "local", Arrays.asList("D=A","@LCL","A=D+M","D=M"),
+        "argument", Arrays.asList("D=A","@ARG","A=D+M","D=M"),
+        "this", Arrays.asList("D=A","@THIS","A=D+M","D=M"),
+        "that", Arrays.asList("D=A","@THAT","A=D+M","D=M"),
         "temp", pushTempCommands,
         "static", pushStaticCommands
     );
 
-    private static final List<String> popLocalCommands = Arrays.asList("D=A","@LCL","D=D+M","@R13","M=D"); // +
-    private static final List<String> popArgumentCommands = Arrays.asList("D=A","@ARG","D=D+M","@R13","M=D"); // +
-    private static final List<String> popThisCommands = Arrays.asList("D=A","@THIS","D=D+M","@R13","M=D"); // +
-    private static final List<String> popThatCommands = Arrays.asList("D=A","@THAT","D=D+M","@R13","M=D"); // +
-    private static final List<String> popTempCommands = Arrays.asList("@SP","AM=M-1","D=M","","M=D"); // +
-
-    private static final List<String> popStaticCommands = Arrays.asList("","D=A","@R13","M=D");
     private static final List<String> popPointerCommands = Arrays.asList("","D=A","@R13","M=D");
-
-    private static final List<String> commonPopEndCommands = Arrays.asList("@SP","AM=M-1","D=M","@R13","A=M","M=D"); // +
+    private static final List<String> popLocalCommands = Arrays.asList("D=A","@LCL","D=D+M","@R13","M=D"); // +
+    private static final List<String> popTempCommands = Arrays.asList("@SP","AM=M-1","D=M","","M=D"); // +
+    private static final List<String> popStaticCommands = Arrays.asList("","D=A","@R13","M=D");
 
     private static final Map<String, List<String>> popCommandsMap = Map.of(
         "pointer", popPointerCommands,
         "local", popLocalCommands,
-        "argument", popArgumentCommands,
-        "this", popThisCommands,
-        "that", popThatCommands,
+        "argument", Arrays.asList("D=A","@ARG","D=D+M","@R13","M=D"),
+        "this", Arrays.asList("D=A","@THIS","D=D+M","@R13","M=D"),
+        "that", Arrays.asList("D=A","@THAT","D=D+M","@R13","M=D"),
         "temp", popTempCommands,
         "static", popStaticCommands
     );
 
-    private static void secondPass(String sourceFile) {
-        String destinationFile = sourceFile.replace(".vm", ".asm");
-        try (
-            // FileReader and BufferedReader to read the .asm file
-            BufferedReader reader = new BufferedReader(new FileReader(sourceFile));
-            //FileWriter and BufferedWriter to write to the .hack file
-            BufferedWriter writer = new BufferedWriter(new FileWriter(destinationFile))
-        ) {
-            String line;
-            while ((line = reader.readLine()) != null) {
-                line = line.trim(); // Remove leading and trailing spaces
-                // Ignore empty lines or comment-only lines
-                if (line.isEmpty() || line.startsWith("//")) {
-                    continue;
+    private static void secondPass(File[] sourceFiles, String destinationFile, Boolean translatingSingleFile) {
+
+        StringBuilder assemblerCodeBuilder = new StringBuilder();
+
+        for (File sourceFile : sourceFiles) {
+            currentFileName = sourceFile.getName().replace(".vm", ""); // Update current file name
+            try (BufferedReader reader = new BufferedReader(new FileReader(sourceFile))) {
+
+                if (!translatingSingleFile) {
+                    assemblerCodeBuilder.append("// Setting SP to 256 \n");
+                    assemblerCodeBuilder.append("\n");
+                    assemblerCodeBuilder.append("@256\nD=A\n@SP\nM=D\n");
+                    assemblerCodeBuilder.append("\n");
+                    assemblerCodeBuilder.append("// Automatic call of Sys.init function \n");
+                    assemblerCodeBuilder.append("\n");
+                    assemblerCodeBuilder.append(generateCallNewFunctionCommand("Sys.init","0"));
+                    assemblerCodeBuilder.append("\n");
                 }
-                // If a comment is inline (e.g., "D=A  // This is a comment"), remove it
-                int commentIndex = line.indexOf("//");
-                if (commentIndex != -1) {
-                    line = line.substring(0, commentIndex).trim(); // Keep only the instruction
+                
+                assemblerCodeBuilder.append("// Start File " + sourceFile.getName() + "\n");
+                assemblerCodeBuilder.append("\n");
+
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    line = line.trim(); // Remove leading and trailing spaces
+                    // Ignore empty lines or comment-only lines
+                    if (line.isEmpty() || line.startsWith("//")) {
+                        continue;
+                    }
+                    // If a comment is inline (e.g., "D=A  // This is a comment"), remove it
+                    int commentIndex = line.indexOf("//");
+                    if (commentIndex != -1) {
+                        line = line.substring(0, commentIndex).trim(); // Keep only the instruction
+                    }
+                    String processedLine = processLine(line);
+                    assemblerCodeBuilder.append(processedLine).append("\n");
+                    lineNumber++;
                 }
-                lineNumber++;
-                String processedLine = processLine(line, lineNumber);
-                writer.write(processedLine);
-                writer.newLine();
+                assemblerCodeBuilder.append("// End File " + sourceFile.getName() + "\n");
+                assemblerCodeBuilder.append("\n");
+            } catch (IOException e) {
+                System.err.println("An error occurred while processing file: " + sourceFile.getName());
+                e.printStackTrace();
             }
-        } catch (IOException e) {
-            System.err.println("An error occurred: " + e.getMessage());
         }
+
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(destinationFile))) {
+            writer.write(assemblerCodeBuilder.toString());
+        } catch (IOException e) {
+            System.err.println("Error Writing File. " + e.getMessage());
+            e.printStackTrace();
+        }
+        
     }
 
-    private static String processLine(String line, Integer lineNumber) {
+    private static String processLine(String line) {
 
         String result = "// " + line + "\n";
 
@@ -112,9 +125,8 @@ public class VMTranslator {
             for (String pushCommand : pushCommandsMap.get(memorySegment)) {
                 result += pushCommand + "\n";
             }
-            for (String commonCommand : commonPushCommands) {
-                result += commonCommand + "\n";
-            }
+
+            result += "@SP\nA=M\nM=D\n@SP\nM=M+1\n";
 
         } else if (line.indexOf("pop") == 0) {
 
@@ -135,82 +147,92 @@ public class VMTranslator {
             result += generatePopASMCommand(memorySegment);
 
         } else if (line.indexOf("add") == 0) {
-            for (String addCommand : addCommands) {
-                result += addCommand + "\n";
-            }
+
+            result += "@SP\nAM=M-1\nD=M\nA=A-1\nM=D+M\n";
+
         } else if (line.indexOf("sub") == 0) {
-            for (String subCommand : subCommands) {
-                result += subCommand + "\n";
-            }
+
+            result += "@SP\nAM=M-1\nD=M\nA=A-1\nM=M-D\n";
+
         } else if (line.indexOf("neg") == 0) {
-            for (String negCommand : negCommands) {
-                result += negCommand + "\n";
-            }
+
+            result += "@SP\nAM=M-1\nM=-M\n@SP\nM=M+1\n";
+
         } else if (line.indexOf("eq") == 0) {
-            for (String eqCommand : eqCommands) {
-                eqCommands.set(6, "@NOT_EQUAL_ZERO" + lineNumber);
-                eqCommands.set(13, "(NOT_EQUAL_ZERO" + lineNumber + ')');
-                eqCommands.set(11, "@END" + lineNumber);
-                eqCommands.set(17, "(END" + lineNumber + ')');
-                result += eqCommand + "\n";
-            }
+
+            result += generateEqGtLtCommands("D;JNE");
+
         } else if (line.indexOf("gt") == 0) {
-            for (String gtCommand : gtCommands) {
-                gtCommands.set(6, "@LESS_OR_EQUAL_ZERO" + lineNumber);
-                gtCommands.set(13, "(LESS_OR_EQUAL_ZERO" + lineNumber + ')');
-                gtCommands.set(11, "@END" + lineNumber);
-                gtCommands.set(17, "(END" + lineNumber + ')');
-                result += gtCommand + "\n";
-            }
+
+            result += generateEqGtLtCommands("D;JLE");
+
         } else if (line.indexOf("lt") == 0) {
-            for (String ltCommand : ltCommands) {
-                ltCommands.set(6, "@GREAT_OR_EQUAL_ZERO" + lineNumber);
-                ltCommands.set(13, "(GREAT_OR_EQUAL_ZERO" + lineNumber + ')');
-                ltCommands.set(11, "@END" + lineNumber);
-                ltCommands.set(17, "(END" + lineNumber + ')');
-                result += ltCommand + "\n";
-            }
+
+            result += generateEqGtLtCommands("D;JGE");
+
         } else if (line.indexOf("and") == 0) {
-            for (String andCommand : andCommands) {
-                result += andCommand + "\n";
-            }
+
+            result += "@SP\nAM=M-1\nD=M\nA=A-1\nM=D&M\n";
+
         } else if (line.indexOf("or") == 0) {
-            for (String orCommand : orCommands) {
-                result += orCommand + "\n";
-            }
+
+            result += "@SP\nAM=M-1\nD=M\nA=A-1\nM=D|M\n";
+
         } else if (line.indexOf("not") == 0) {
-            for (String notCommand : notCommands) {
-                result += notCommand + "\n";
-            }
+
+            result += "@SP\nA=M-1\nM=!M\n";
+
         } else if (line.indexOf("label") == 0) {
+
             result += "(" + parts[1] + ")" + "\n";
+
         } else if (line.indexOf("if-goto") == 0) {
-            ifGotoCommands.set(3, "@"+parts[1]);
-            for (String ifGotoCommand : ifGotoCommands) {
-                result += ifGotoCommand + "\n";
-            }
+
+            result += "@SP\nAM=M-1\nD=M\n" + "@"+parts[1] + "\nD;JNE\n";
+
         } else if (line.indexOf("goto") == 0) {
-            gotoCommands.set(0, "@"+parts[1]);
-            for (String gotoCommand : gotoCommands) {
-                result += gotoCommand + "\n";
-            }
+
+            result += "@"+parts[1] + "\n0;JMP\n";
+
         } else if (line.indexOf("function") == 0) {
+
             result += "(" + parts[1] + ")" + "\n";
+
             for (Integer i = 0; i < Integer.parseInt(parts[2]); i++) {
                 result += "@SP\nA=M\nM=0\n@SP\nM=M+1\n";
             }
+
         } else if (line.indexOf("call") == 0) {
-            callNewFunctionCommands.set(callNewFunctionCommands.size()-1,"(ReturAddress_"+parts[1]+lineNumber + ")");
-            callNewFunctionCommands.set(0,"@ReturAddress_"+parts[1]+lineNumber);
-            callNewFunctionCommands.set(callNewFunctionCommands.size()-3,"@"+parts[1]);
-            callNewFunctionCommands.set(callNewFunctionCommands.size()-15,"@"+parts[2]);
-            for (String callFuncCommand : callNewFunctionCommands) {
-                result += callFuncCommand + "\n";
-            }
+            result += generateCallNewFunctionCommand(parts[1],parts[2]);
         } else if (line.indexOf("return") == 0) {
             for (String returnFuncCommand : returnNewFunctionCommands) {
                 result += returnFuncCommand + "\n";
             }
+        }
+        return result;
+    }
+
+    private static String generateCallNewFunctionCommand(String calledFunctionName, String numberOfArguments) {
+        String result = "";
+        callNewFunctionCommands.set(callNewFunctionCommands.size()-1,"(ReturAddress_"+calledFunctionName+lineNumber + ")");
+        callNewFunctionCommands.set(0,"@ReturAddress_"+calledFunctionName+lineNumber);
+        callNewFunctionCommands.set(callNewFunctionCommands.size()-3,"@"+calledFunctionName);
+        callNewFunctionCommands.set(callNewFunctionCommands.size()-6,"@"+numberOfArguments);
+        for (String callFuncCommand : callNewFunctionCommands) {
+            result += callFuncCommand + "\n";
+        }
+        return result;
+    }
+
+    private static String generateEqGtLtCommands(String jumpCommand) {
+        String result = "";
+        eq_gt_lt_Commands.set(1,"@JUMP_LABEL" + lineNumber);
+        eq_gt_lt_Commands.set(2,jumpCommand);
+        eq_gt_lt_Commands.set(4,"@END_LABEL" + lineNumber);
+        eq_gt_lt_Commands.set(6,"(JUMP_LABEL" + lineNumber + ")");
+        eq_gt_lt_Commands.set(8,"(END_LABEL" + lineNumber + ")");
+        for (String eqCommand : eq_gt_lt_Commands) {
+            result += eqCommand + "\n";
         }
         return result;
     }
@@ -221,212 +243,84 @@ public class VMTranslator {
             result += popCommand + "\n";
         }
         if (!memorySegment.equals("temp")) {
-            for (String commonPopCommand : commonPopEndCommands) {
-                result += commonPopCommand + "\n";
-            }
+            result += "@SP\nAM=M-1\nD=M\n@R13\nA=M\nM=D\n";
         }
         return result;
     }
 
-    public static void main(String[] args) throws Exception {
-        secondPass(args[0]);
-    }
-
-    private static final List<String> addCommands = Arrays.asList("@SP","AM=M-1","D=M","A=A-1","M=D+M");
-    private static final List<String> andCommands = Arrays.asList("@SP","AM=M-1","D=M","A=A-1","M=D&M");
-    private static final List<String> orCommands = Arrays.asList("@SP","AM=M-1","D=M","A=A-1","M=D|M");
-    private static final List<String> notCommands = Arrays.asList("@SP","A=M-1","M=!M");
-    private static final List<String> subCommands = Arrays.asList("@SP","AM=M-1","D=M","A=A-1","M=M-D");
-    private static final List<String> negCommands = Arrays.asList("@SP","AM=M-1","M=-M","@SP","M=M+1");
-    private static final List<String> eqCommands = Arrays.asList(
-    "@SP",
-        "AM=M-1",
-        "D=M",
-        "@SP",
-        "AM=M-1",
-        "D=M-D",
-        "", // @NOT_EQUAL_ZERO 6
-        "D;JNE",
-        "@SP",
-        "A=M",
-        "M=-1",
-        "", // @END 11
+    private static final List<String> eq_gt_lt_Commands = Arrays.asList(
+        "@SP\nAM=M-1\nD=M\n@SP\nAM=M-1\nD=M-D",
+        "", // @JUMP_LABEL
+        "", // Type of a jump JNE, JLE, JGE
+        "@SP\nA=M\nM=-1",
+        "", // @END_LABEL,
         "0;JMP",
-        "", // (NOT_EQUAL_ZERO) 13
-        "@SP",
-        "A=M",
-        "M=0",
-        "", // (END)17
-        "@SP",
-        "AM=M+1"
+        "", // (JUMP_LABEL)
+        "@SP\nA=M\nM=0",
+        "", // (END_LABEL)
+        "@SP\nAM=M+1"
     );
-
-    private static final List<String> gtCommands = Arrays.asList(
-    "@SP",
-        "AM=M-1",
-        "D=M",
-        "@SP",
-        "AM=M-1",
-        "D=M-D",
-        "", // @LESS_OR_EQUAL_ZERO 6
-        "D;JLE",
-        "@SP",
-        "A=M",
-        "M=-1",
-        "", // @END 11
-        "0;JMP",
-        "", // (LESS_OR_EQUAL_ZERO) 13
-        "@SP",
-        "A=M",
-        "M=0",
-        "", // (END)17
-        "@SP",
-        "AM=M+1"
-    );
-
-    private static final List<String> ltCommands = Arrays.asList(
-    "@SP",
-        "AM=M-1",
-        "D=M",
-        "@SP",
-        "AM=M-1",
-        "D=M-D",
-        "", // @GREAT_OR_EQUAL_ZERO 6
-        "D;JGE",
-        "@SP",
-        "A=M",
-        "M=-1",
-        "", // @END 11
-        "0;JMP",
-        "", // (GREAT_OR_EQUAL_ZERO) 13
-        "@SP",
-        "A=M",
-        "M=0",
-        "", // (END)17
-        "@SP",
-        "AM=M+1"
-    );
-
-    private static final List<String> ifGotoCommands = Arrays.asList("@SP","AM=M-1","D=M","","D;JNE");
-    private static final List<String> gotoCommands = Arrays.asList("","0;JMP");
 
     private static final List<String> callNewFunctionCommands = Arrays.asList(
         // Saving current return address into the stack
-        "", // this label name assigned dynamically based on caller's name
-        "D=A",
-        "@SP",
-        "A=M",
-        "M=D",
-        "@SP",
-        "M=M+1",
+        "", // here we set return address label based on caller's name 
+        "D=A\n@SP\nA=M\nM=D\n@SP\nM=M+1",
         // Saving LCL to the stack
-        "@LCL",
-        "D=M",
-        "@SP",
-        "A=M",
-        "M=D",
-        "@SP",
-        "M=M+1",
+        "@LCL\nD=M\n@SP\nA=M\nM=D\n@SP\nM=M+1",
         // Saving ARG to the stack
-        "@ARG",
-        "D=M",
-        "@SP",
-        "A=M",
-        "M=D",
-        "@SP",
-        "M=M+1",
+        "@ARG\nD=M\n@SP\nA=M\nM=D\n@SP\nM=M+1",
         // Saving THIS to the stack
-        "@THIS",
-        "D=M",
-        "@SP",
-        "A=M",
-        "M=D",
-        "@SP",
-        "M=M+1",
+        "@THIS\nD=M\n@SP\nA=M\nM=D\n@SP\nM=M+1",
         // Saving THAT to the stack
-        "@THAT",
-        "D=M",
-        "@SP",
-        "A=M",
-        "M=D",
-        "@SP",
-        "M=M+1",
-        // repositioning ARG (for new function context)
+        "@THAT\nD=M\n@SP\nA=M\nM=D\n@SP\nM=M+1",
         "", // this changed dynamically depending in the number of args
-        "D=A",
-        "@5",
-        "D=D+A",
-        "@SP",
-        "D=M-D",
-        "@ARG",
-        "M=D",
+        // repositioning ARG (for new function context)
+        "D=A\n@5\nD=D+A\n@SP\nD=M-D\n@ARG\nM=D",
         // repositioning LCL (for new function context)
-        "@SP",
-        "D=M",
-        "@LCL",
-        "M=D",
-        // jumping to called function
+        "@SP\nD=M\n@LCL\nM=D",
         "", // function name assigned dynamically based on callee's name
+        // jumping to called function
         "0;JMP",
-        "" //this label name assigned dynamically based on caller's name 
+        "" //here we place return address label based on caller's name 
     );
 
     private static final List<String> returnNewFunctionCommands = Arrays.asList(
         // Get endFrame (current LCL) and Return Address
-    "@LCL",
-        "D=M",
-        "@R13",
-        "M=D",
-        "@5",
-        "A=D-A",
-        "D=M",
-        "@R14",
-        "M=D",
+        "@LCL\nD=M\n@R13\nM=D\n@5\nA=D-A\nD=M\n@R14\nM=D",
         // Set return result into ARG and set SP next to new return result
-        "@SP",
-        "AM=M-1",
-        "D=M",
-        "@ARG",
-        "A=M",
-        "M=D",
-        "D=A+1",
-        "@SP",
-        "M=D",
+        "@SP\nAM=M-1\nD=M\n@ARG\nA=M\nM=D\nD=A+1\n@SP\nM=D",
         // Restoring LCL
-        "@4",
-        "D=A",
-        "@R13",
-        "A=M-D",
-        "D=M",
-        "@LCL",
-        "M=D",
+        "@4\nD=A\n@R13\nA=M-D\nD=M\n@LCL\nM=D",
         // Restoring ARG
-        "@3",
-        "D=A",
-        "@R13",
-        "A=M-D",
-        "D=M",
-        "@ARG",
-        "M=D",
+        "@3\nD=A\n@R13\nA=M-D\nD=M\n@ARG\nM=D",
         // Restoring THIS
-        "@2",
-        "D=A",
-        "@R13",
-        "A=M-D",
-        "D=M",
-        "@THIS",
-        "M=D",
+        "@2\nD=A\n@R13\nA=M-D\nD=M\n@THIS\nM=D",
         // Restoring THAT
-        "@1",
-        "D=A",
-        "@R13",
-        "A=M-D",
-        "D=M",
-        "@THAT",
-        "M=D",
+        "@1\nD=A\n@R13\nA=M-D\nD=M\n@THAT\nM=D",
         // goto returnAddress
-        "@R14",
-        "A=M",
-        "0;JMP"
+        "@R14\nA=M\n0;JMP\n// End function\n"
     );
+
+    public static void main(String[] args) throws Exception {
+        if (args.length == 0) {
+            System.err.println("Please provide a file or directory path as an argument.");
+            return;
+        }
+        File inputPath = new File(args[0]);
+        if (inputPath.isFile() && args[0].endsWith(".vm")) {
+            String outputFileName = args[0].replace(".vm", ".asm");
+            secondPass(new File[] { inputPath }, outputFileName, true);
+        } else if (inputPath.isDirectory()) {
+            File[] files = inputPath.listFiles((dir, name) -> name.endsWith(".vm"));
+            if (files == null || files.length == 0) {
+                System.err.println("No .vm files found in the directory.");
+                return;
+            }
+            String folderName = inputPath.getName();
+            String outputFileName = inputPath.getAbsolutePath() + File.separator + folderName + ".asm";
+            secondPass(files, outputFileName, false);
+        } else {
+            System.err.println("Invalid input. Please provide a .vm file or a directory.");
+        }
+    }
 }
