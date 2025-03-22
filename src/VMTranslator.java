@@ -48,21 +48,21 @@ public class VMTranslator {
 
         StringBuilder assemblerCodeBuilder = new StringBuilder();
 
+        if (!translatingSingleFile) {
+            assemblerCodeBuilder.append("// Setting SP to 256 \n");
+            assemblerCodeBuilder.append("\n");
+            assemblerCodeBuilder.append("@256\nD=A\n@SP\nM=D\n");
+            assemblerCodeBuilder.append("\n");
+            assemblerCodeBuilder.append("// Automatic call of Sys.init function \n");
+            assemblerCodeBuilder.append("\n");
+            assemblerCodeBuilder.append(generateCallNewFunctionCommand("Sys.init","0"));
+            assemblerCodeBuilder.append("\n");
+        }
+
         for (File sourceFile : sourceFiles) {
             currentFileName = sourceFile.getName().replace(".vm", ""); // Update current file name
             try (BufferedReader reader = new BufferedReader(new FileReader(sourceFile))) {
 
-                if (!translatingSingleFile) {
-                    assemblerCodeBuilder.append("// Setting SP to 256 \n");
-                    assemblerCodeBuilder.append("\n");
-                    assemblerCodeBuilder.append("@256\nD=A\n@SP\nM=D\n");
-                    assemblerCodeBuilder.append("\n");
-                    assemblerCodeBuilder.append("// Automatic call of Sys.init function \n");
-                    assemblerCodeBuilder.append("\n");
-                    assemblerCodeBuilder.append(generateCallNewFunctionCommand("Sys.init","0"));
-                    assemblerCodeBuilder.append("\n");
-                }
-                
                 assemblerCodeBuilder.append("// Start File " + sourceFile.getName() + "\n");
                 assemblerCodeBuilder.append("\n");
 
