@@ -1,7 +1,6 @@
 class Snake {
 
-    field Block snakePart;
-    field Array snakeBody;
+    field Array snakeBody; // Array of int addresses
     field int currentIndex, i;
 
     constructor Snake new() {
@@ -10,7 +9,7 @@ class Snake {
         return this;
     }
 
-    method void increaseSnake(Block newSnakePart) {
+    method void increaseSnake(int newSnakePart) {
         let snakeBody[currentIndex] = newSnakePart;
         let currentIndex = currentIndex + 1;
         return;
@@ -24,18 +23,16 @@ class Snake {
         return currentIndex;
     }
 
-    method Block getSnakePart(int index) {
+    method int getSnakePart(int index) {
         return snakeBody[index];
     }
 
+    method void updateSnake(int index, int address) {
+        let snakeBody[index] = address;
+        return;
+    }
+
     method void dispose() {
-        let i = 0;
-        let currentIndex = currentIndex - 1;
-        while (i < currentIndex) {
-            let snakePart = snakeBody[i];
-            do snakePart.dispose();
-            let i = i + 1;
-        }
         do snakeBody.dispose();
         do Memory.deAlloc(this);
         return;

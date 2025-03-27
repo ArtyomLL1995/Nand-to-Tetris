@@ -1,11 +1,13 @@
 function SnakeGame.new 0
-    push constant 8
+    push constant 9
     call Memory.alloc 1
     pop pointer 0
+    push constant 100
+    pop this 6
     push constant 1
     pop this 1
     push constant 132
-    pop this 7
+    pop this 8
     push constant 0
     pop this 3
     push constant 5
@@ -17,9 +19,9 @@ function SnakeGame.new 0
     pop temp 0
     call Snake.new 0
     pop this 0
-    push constant 75
+    push constant 76
     push constant 0
-    push constant 75
+    push constant 76
     push constant 256
     call Screen.drawLine 4
     pop temp 0
@@ -38,29 +40,39 @@ function SnakeGame.new 0
     push constant 58
     call String.appendChar 2
     push constant 1
-    push constant 0
     push constant 1
-    call Debug.debug 4
-    pop temp 0
-    push constant 4
-    call String.new 1
-    push constant 32
-    call String.appendChar 2
-    push constant 32
-    call String.appendChar 2
-    push constant 32
-    call String.appendChar 2
-    push constant 32
-    call String.appendChar 2
-    push constant 3
     push constant 0
-    push constant 5
     call Debug.debug 4
     pop temp 0
     push this 3
     push constant 3
+    push constant 1
     push constant 0
+    call Debug.debugInt 4
+    pop temp 0
+    push constant 6
+    call String.new 1
+    push constant 83
+    call String.appendChar 2
+    push constant 80
+    call String.appendChar 2
+    push constant 69
+    call String.appendChar 2
+    push constant 69
+    call String.appendChar 2
+    push constant 68
+    call String.appendChar 2
+    push constant 58
+    call String.appendChar 2
     push constant 5
+    push constant 1
+    push constant 0
+    call Debug.debug 4
+    pop temp 0
+    push this 6
+    push constant 7
+    push constant 1
+    push constant 0
     call Debug.debugInt 4
     pop temp 0
     push pointer 0
@@ -71,9 +83,8 @@ function SnakeGame.drawSnake 3
     push this 0
     push constant 0
     call Snake.getSnakePart 2
-    pop local 0
-    push local 0
-    call Block.getBaseAddress 1
+    pop local 1
+    push local 1
     call SnakeGame.erase 1
     pop temp 0
     push this 0
@@ -82,23 +93,23 @@ function SnakeGame.drawSnake 3
     push constant 1
     sub
     call Snake.getSnakePart 2
-    pop local 1
-    push static 0
-    push local 1
-    call Block.getBaseAddress 1
-    call SnakeGame.calcNextAddress 2
     pop local 2
+    push static 0
     push local 2
+    call SnakeGame.calcNextAddress 2
+    pop local 0
+    push local 0
     push constant 0
     gt
     not
     if-goto SnakeGame_1
-    push local 2
+    push local 0
     call SnakeGame.draw 1
     pop temp 0
+    push this 0
+    push constant 0
     push local 0
-    push local 2
-    call Block.setBaseAddress 2
+    call Snake.updateSnake 3
     pop temp 0
     push this 0
     call Snake.getSnakeBody 1
@@ -114,14 +125,11 @@ label SnakeGame_1
 label SnakeGame_0
     push constant 0
     return
-function SnakeGame.initializeNewSnakePart 1
+function SnakeGame.initializeNewSnakePart 0
     push argument 0
     pop pointer 0
-    push argument 1
-    call Block.new 1
-    pop local 0
     push this 0
-    push local 0
+    push argument 1
     call Snake.increaseSnake 2
     pop temp 0
     push argument 1
@@ -132,7 +140,7 @@ function SnakeGame.initializeNewSnakePart 1
 function SnakeGame.calcNextAddress 6
     push argument 0
     pop pointer 0
-    push this 7
+    push this 8
     push constant 130
     eq
     not
@@ -140,11 +148,11 @@ function SnakeGame.calcNextAddress 6
     push argument 1
     push constant 1
     sub
-    pop local 2
+    pop local 1
     goto SnakeGame_2
 label SnakeGame_3
 label SnakeGame_2
-    push this 7
+    push this 8
     push constant 131
     eq
     not
@@ -154,11 +162,11 @@ label SnakeGame_2
     push constant 16
     call Math.multiply 2
     sub
-    pop local 2
+    pop local 1
     goto SnakeGame_4
 label SnakeGame_5
 label SnakeGame_4
-    push this 7
+    push this 8
     push constant 132
     eq
     not
@@ -166,11 +174,11 @@ label SnakeGame_4
     push argument 1
     push constant 1
     add
-    pop local 2
+    pop local 1
     goto SnakeGame_6
 label SnakeGame_7
 label SnakeGame_6
-    push this 7
+    push this 8
     push constant 133
     eq
     not
@@ -180,21 +188,235 @@ label SnakeGame_6
     push constant 16
     call Math.multiply 2
     add
-    pop local 2
+    pop local 1
     goto SnakeGame_8
 label SnakeGame_9
 label SnakeGame_8
-    push local 2
+    push local 1
+    push constant 1
+    neg
+    lt
+    not
+    if-goto SnakeGame_11
+    push argument 1
+    push constant 32
+    push constant 15
+    call Math.multiply 2
+    push constant 16
+    call Math.multiply 2
+    add
+    pop local 1
+    goto SnakeGame_10
+label SnakeGame_11
+label SnakeGame_10
+    push local 1
+    push constant 7712
+    gt
+    not
+    if-goto SnakeGame_13
+    push argument 1
+    push constant 32
+    push constant 15
+    call Math.multiply 2
+    push constant 16
+    call Math.multiply 2
+    sub
+    pop local 1
+    goto SnakeGame_12
+label SnakeGame_13
+label SnakeGame_12
+    push local 1
+    push constant 32
+    eq
+    push local 1
+    push constant 544
+    eq
+    or
+    push local 1
+    push constant 1056
+    eq
+    or
+    push local 1
+    push constant 1568
+    eq
+    or
+    push local 1
+    push constant 2080
+    eq
+    or
+    push local 1
+    push constant 2592
+    eq
+    or
+    push local 1
+    push constant 3104
+    eq
+    or
+    push local 1
+    push constant 3616
+    eq
+    or
+    push local 1
+    push constant 4128
+    eq
+    or
+    push local 1
+    push constant 4640
+    eq
+    or
+    push local 1
+    push constant 5152
+    eq
+    or
+    push local 1
+    push constant 5664
+    eq
+    or
+    push local 1
+    push constant 6176
+    eq
+    or
+    push local 1
+    push constant 6688
+    eq
+    or
+    push local 1
+    push constant 7200
+    eq
+    or
+    push local 1
+    push constant 7712
+    eq
+    or
+    not
+    if-goto SnakeGame_15
+    push argument 1
+    push constant 31
+    push this 4
+    sub
+    sub
+    pop local 1
+    goto SnakeGame_14
+label SnakeGame_15
+label SnakeGame_14
+    push local 1
+    push constant 1
+    neg
+    push this 4
+    add
+    eq
+    push local 1
+    push constant 511
+    push this 4
+    add
+    eq
+    or
+    push local 1
+    push constant 1023
+    push this 4
+    add
+    eq
+    or
+    push local 1
+    push constant 1535
+    push this 4
+    add
+    eq
+    or
+    push local 1
+    push constant 2047
+    push this 4
+    add
+    eq
+    or
+    push local 1
+    push constant 2559
+    push this 4
+    add
+    eq
+    or
+    push local 1
+    push constant 3071
+    push this 4
+    add
+    eq
+    or
+    push local 1
+    push constant 3583
+    push this 4
+    add
+    eq
+    or
+    push local 1
+    push constant 4095
+    push this 4
+    add
+    eq
+    or
+    push local 1
+    push constant 4607
+    push this 4
+    add
+    eq
+    or
+    push local 1
+    push constant 5119
+    push this 4
+    add
+    eq
+    or
+    push local 1
+    push constant 5631
+    push this 4
+    add
+    eq
+    or
+    push local 1
+    push constant 6143
+    push this 4
+    add
+    eq
+    or
+    push local 1
+    push constant 6655
+    push this 4
+    add
+    eq
+    or
+    push local 1
+    push constant 7167
+    push this 4
+    add
+    eq
+    or
+    push local 1
+    push constant 7679
+    push this 4
+    add
+    eq
+    or
+    not
+    if-goto SnakeGame_17
+    push argument 1
+    push constant 31
+    push this 4
+    sub
+    add
+    pop local 1
+    goto SnakeGame_16
+label SnakeGame_17
+label SnakeGame_16
+    push local 1
     push this 2
     eq
     not
-    if-goto SnakeGame_11
+    if-goto SnakeGame_19
     push static 0
-    push local 2
+    push local 1
     call SnakeGame.initializeNewSnakePart 2
     pop temp 0
     push this 5
-    push this 6
+    push this 7
     push constant 80
     call Random.next 3
     pop this 2
@@ -208,264 +430,59 @@ label SnakeGame_8
     pop this 3
     push this 3
     push constant 3
+    push constant 1
     push constant 0
-    push constant 5
+    call Debug.debugInt 4
+    pop temp 0
+    push this 6
+    push constant 1
+    sub
+    pop this 6
+    push this 6
+    push constant 7
+    push constant 1
+    push constant 0
     call Debug.debugInt 4
     pop temp 0
     push static 0
-    push local 2
+    push local 1
     call SnakeGame.calcNextAddress 2
     return
-    goto SnakeGame_10
-label SnakeGame_11
-    push local 2
-    push constant 1
-    neg
-    lt
-    not
-    if-goto SnakeGame_13
-    push argument 1
-    push constant 32
-    push constant 15
-    call Math.multiply 2
-    push constant 16
-    call Math.multiply 2
-    add
-    pop local 2
-    goto SnakeGame_12
-label SnakeGame_13
-label SnakeGame_12
-    push local 2
-    push constant 7712
-    gt
-    not
-    if-goto SnakeGame_15
-    push argument 1
-    push constant 32
-    push constant 15
-    call Math.multiply 2
-    push constant 16
-    call Math.multiply 2
-    sub
-    pop local 2
-    goto SnakeGame_14
-label SnakeGame_15
-label SnakeGame_14
-    push local 2
-    push constant 32
-    eq
-    push local 2
-    push constant 544
-    eq
-    or
-    push local 2
-    push constant 1056
-    eq
-    or
-    push local 2
-    push constant 1568
-    eq
-    or
-    push local 2
-    push constant 2080
-    eq
-    or
-    push local 2
-    push constant 2592
-    eq
-    or
-    push local 2
-    push constant 3104
-    eq
-    or
-    push local 2
-    push constant 3616
-    eq
-    or
-    push local 2
-    push constant 4128
-    eq
-    or
-    push local 2
-    push constant 4640
-    eq
-    or
-    push local 2
-    push constant 5152
-    eq
-    or
-    push local 2
-    push constant 5664
-    eq
-    or
-    push local 2
-    push constant 6176
-    eq
-    or
-    push local 2
-    push constant 6688
-    eq
-    or
-    push local 2
-    push constant 7200
-    eq
-    or
-    push local 2
-    push constant 7712
-    eq
-    or
-    not
-    if-goto SnakeGame_17
-    push argument 1
-    push constant 31
-    push this 4
-    sub
-    sub
-    pop local 2
-    goto SnakeGame_16
-label SnakeGame_17
-label SnakeGame_16
-    push local 2
-    push constant 1
-    neg
-    push this 4
-    add
-    eq
-    push local 2
-    push constant 511
-    push this 4
-    add
-    eq
-    or
-    push local 2
-    push constant 1023
-    push this 4
-    add
-    eq
-    or
-    push local 2
-    push constant 1535
-    push this 4
-    add
-    eq
-    or
-    push local 2
-    push constant 2047
-    push this 4
-    add
-    eq
-    or
-    push local 2
-    push constant 2559
-    push this 4
-    add
-    eq
-    or
-    push local 2
-    push constant 3071
-    push this 4
-    add
-    eq
-    or
-    push local 2
-    push constant 3583
-    push this 4
-    add
-    eq
-    or
-    push local 2
-    push constant 4095
-    push this 4
-    add
-    eq
-    or
-    push local 2
-    push constant 4607
-    push this 4
-    add
-    eq
-    or
-    push local 2
-    push constant 5119
-    push this 4
-    add
-    eq
-    or
-    push local 2
-    push constant 5631
-    push this 4
-    add
-    eq
-    or
-    push local 2
-    push constant 6143
-    push this 4
-    add
-    eq
-    or
-    push local 2
-    push constant 6655
-    push this 4
-    add
-    eq
-    or
-    push local 2
-    push constant 7167
-    push this 4
-    add
-    eq
-    or
-    push local 2
-    push constant 7679
-    push this 4
-    add
-    eq
-    or
-    not
-    if-goto SnakeGame_19
-    push argument 1
-    push constant 31
-    push this 4
-    sub
-    add
-    pop local 2
     goto SnakeGame_18
 label SnakeGame_19
-label SnakeGame_18
     push this 0
     call Snake.getCurrentIndex 1
     push constant 1
     sub
-    pop local 5
-    push constant 0
     pop local 4
+    push constant 0
+    pop local 3
 label SnakeGame_20
+    push local 3
     push local 4
-    push local 5
     lt
     not
     if-goto SnakeGame_21
     push this 0
-    push local 4
+    push local 3
     call Snake.getSnakePart 2
-    pop local 1
-    push local 2
+    pop local 5
     push local 1
-    call Block.getBaseAddress 1
+    push local 5
     eq
     not
     if-goto SnakeGame_23
     push constant 1
     neg
     pop local 0
-    push local 5
-    pop local 4
+    push local 4
+    pop local 3
     goto SnakeGame_22
 label SnakeGame_23
-    push local 4
+    push local 3
     push constant 1
     add
-    pop local 4
+    pop local 3
 label SnakeGame_22
     goto SnakeGame_20
 label SnakeGame_21
@@ -480,10 +497,10 @@ label SnakeGame_21
     return
     goto SnakeGame_24
 label SnakeGame_25
-    push local 2
+    push local 1
     return
 label SnakeGame_24
-label SnakeGame_10
+label SnakeGame_18
 function SnakeGame.gameLoop 1
     push argument 0
     pop pointer 0
@@ -504,7 +521,7 @@ label SnakeGame_26
     push local 0
     push constant 130
     eq
-    push this 7
+    push this 8
     push constant 132
     eq
     not
@@ -512,14 +529,14 @@ label SnakeGame_26
     not
     if-goto SnakeGame_31
     push local 0
-    pop this 7
+    pop this 8
     goto SnakeGame_30
 label SnakeGame_31
 label SnakeGame_30
     push local 0
     push constant 131
     eq
-    push this 7
+    push this 8
     push constant 133
     eq
     not
@@ -527,14 +544,14 @@ label SnakeGame_30
     not
     if-goto SnakeGame_33
     push local 0
-    pop this 7
+    pop this 8
     goto SnakeGame_32
 label SnakeGame_33
 label SnakeGame_32
     push local 0
     push constant 132
     eq
-    push this 7
+    push this 8
     push constant 130
     eq
     not
@@ -542,14 +559,14 @@ label SnakeGame_32
     not
     if-goto SnakeGame_35
     push local 0
-    pop this 7
+    pop this 8
     goto SnakeGame_34
 label SnakeGame_35
 label SnakeGame_34
     push local 0
     push constant 133
     eq
-    push this 7
+    push this 8
     push constant 131
     eq
     not
@@ -557,7 +574,7 @@ label SnakeGame_34
     not
     if-goto SnakeGame_37
     push local 0
-    pop this 7
+    pop this 8
     goto SnakeGame_36
 label SnakeGame_37
 label SnakeGame_36
@@ -585,7 +602,7 @@ label SnakeGame_38
     push static 0
     call SnakeGame.drawSnake 1
     pop temp 0
-    push constant 100
+    push this 6
     call Sys.wait 1
     pop temp 0
     goto SnakeGame_26
@@ -600,9 +617,9 @@ label SnakeGame_27
     call String.appendChar 2
     push constant 69
     call String.appendChar 2
-    push constant 1
+    push constant 10
+    push constant 30
     push constant 0
-    push constant 2
     call Debug.debug 4
     pop temp 0
     push constant 4
@@ -615,9 +632,9 @@ label SnakeGame_27
     call String.appendChar 2
     push constant 82
     call String.appendChar 2
-    push constant 3
+    push constant 13
+    push constant 30
     push constant 0
-    push constant 2
     call Debug.debug 4
     pop temp 0
     push constant 0
@@ -807,7 +824,7 @@ function SnakeGame.generateOutOfBoundsBlocks 3
     push constant 16
     call Math.multiply 2
     call Array.new 1
-    pop this 6
+    pop this 7
     push constant 0
     pop local 0
     push constant 0
@@ -827,7 +844,7 @@ label SnakeGame_42
     not
     if-goto SnakeGame_43
     push local 2
-    push this 6
+    push this 7
     add
     push local 1
     push constant 32
@@ -978,7 +995,6 @@ label SnakeGame_46
     push that 0
     pop local 2
     push local 2
-    call Block.getBaseAddress 1
     push local 6
     eq
     not
@@ -1005,7 +1021,7 @@ label SnakeGame_47
     if-goto SnakeGame_51
     push static 0
     push this 5
-    push this 6
+    push this 7
     push constant 80
     call Random.next 3
     call SnakeGame.generateFoodPosition 2
@@ -1037,7 +1053,7 @@ function SnakeGame.getCurrentGame 0
 function SnakeGame.dispose 0
     push argument 0
     pop pointer 0
-    push this 6
+    push this 7
     call Array.dispose 1
     pop temp 0
     push this 0

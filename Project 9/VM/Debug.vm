@@ -1,8 +1,10 @@
 function Debug.debug 0
     push argument 1
-    push argument 2
+    push argument 3
+    push constant 1
+    neg
     push constant 0
-    call Debug.setCoursor 3
+    call Debug.setCoursor 4
     pop temp 0
     push constant 7
     call String.new 1
@@ -23,9 +25,10 @@ function Debug.debug 0
     call Output.printString 1
     pop temp 0
     push argument 1
-    push argument 2
     push argument 3
-    call Debug.setCoursor 3
+    push constant 0
+    push argument 2
+    call Debug.setCoursor 4
     pop temp 0
     push argument 0
     call Output.printString 1
@@ -34,9 +37,11 @@ function Debug.debug 0
     return
 function Debug.debugInt 0
     push argument 1
-    push argument 2
+    push argument 3
+    push constant 1
+    neg
     push constant 0
-    call Debug.setCoursor 3
+    call Debug.setCoursor 4
     pop temp 0
     push constant 7
     call String.new 1
@@ -57,9 +62,10 @@ function Debug.debugInt 0
     call Output.printString 1
     pop temp 0
     push argument 1
-    push argument 2
     push argument 3
-    call Debug.setCoursor 3
+    push constant 0
+    push argument 2
+    call Debug.setCoursor 4
     pop temp 0
     push argument 0
     call Output.printInt 1
@@ -68,9 +74,11 @@ function Debug.debugInt 0
     return
 function Debug.debugChar 0
     push argument 1
-    push argument 2
+    push argument 3
+    push constant 1
+    neg
     push constant 0
-    call Debug.setCoursor 3
+    call Debug.setCoursor 4
     pop temp 0
     push constant 7
     call String.new 1
@@ -91,9 +99,10 @@ function Debug.debugChar 0
     call Output.printString 1
     pop temp 0
     push argument 1
-    push argument 2
     push argument 3
-    call Debug.setCoursor 3
+    push constant 0
+    push argument 2
+    call Debug.setCoursor 4
     pop temp 0
     push argument 0
     call Output.printChar 1
@@ -102,9 +111,11 @@ function Debug.debugChar 0
     return
 function Debug.debugBoolean 0
     push argument 1
-    push argument 2
+    push argument 3
+    push constant 1
+    neg
     push constant 0
-    call Debug.setCoursor 3
+    call Debug.setCoursor 4
     pop temp 0
     push constant 7
     call String.new 1
@@ -125,9 +136,10 @@ function Debug.debugBoolean 0
     call Output.printString 1
     pop temp 0
     push argument 1
-    push argument 2
     push argument 3
-    call Debug.setCoursor 3
+    push constant 0
+    push argument 2
+    call Debug.setCoursor 4
     pop temp 0
     push argument 0
     push constant 1
@@ -166,11 +178,6 @@ label Debug_1
 label Debug_0
     push constant 0
     return
-function Debug.setOffset 0
-    push argument 0
-    pop static 0
-    push constant 0
-    return
 function Debug.setCoursor 0
     push argument 1
     push constant 1
@@ -179,9 +186,14 @@ function Debug.setCoursor 0
     not
     if-goto Debug_3
     push static 0
-    push argument 2
+    push argument 3
     call Output.moveCursor 2
     pop temp 0
+    push argument 2
+    push constant 0
+    eq
+    not
+    if-goto Debug_5
     push static 0
     push constant 1
     add
@@ -190,16 +202,19 @@ function Debug.setCoursor 0
     push constant 21
     gt
     not
-    if-goto Debug_5
+    if-goto Debug_7
     push constant 0
     pop static 0
+    goto Debug_6
+label Debug_7
+label Debug_6
     goto Debug_4
 label Debug_5
 label Debug_4
     goto Debug_2
 label Debug_3
     push argument 0
-    push argument 2
+    push argument 3
     call Output.moveCursor 2
     pop temp 0
 label Debug_2
