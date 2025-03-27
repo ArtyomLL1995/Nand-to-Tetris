@@ -1,0 +1,44 @@
+class Snake {
+
+    field Block snakePart;
+    field Array snakeBody;
+    field int currentIndex, i;
+
+    constructor Snake new() {
+        let snakeBody = Array.new(100);
+        let currentIndex = 0;
+        return this;
+    }
+
+    method void increaseSnake(Block newSnakePart) {
+        let snakeBody[currentIndex] = newSnakePart;
+        let currentIndex = currentIndex + 1;
+        return;
+    }
+
+    method Array getSnakeBody() {
+        return snakeBody;
+    }
+
+    method int getCurrentIndex() {
+        return currentIndex;
+    }
+
+    method Block getSnakePart(int index) {
+        return snakeBody[index];
+    }
+
+    method void dispose() {
+        let i = 0;
+        let currentIndex = currentIndex - 1;
+        while (i < currentIndex) {
+            let snakePart = snakeBody[i];
+            do snakePart.dispose();
+            let i = i + 1;
+        }
+        do snakeBody.dispose();
+        do Memory.deAlloc(this);
+        return;
+    }
+
+}

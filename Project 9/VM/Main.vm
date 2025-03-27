@@ -1,0 +1,10 @@
+function Main.main 1
+    call SnakeGame.createNewGame 0
+    pop temp 0
+    call SnakeGame.getCurrentGame 0
+    pop local 0
+    push local 0
+    call SnakeGame.dispose 1
+    pop temp 0
+    push constant 0
+    return

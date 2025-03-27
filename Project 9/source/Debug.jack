@@ -1,0 +1,58 @@
+class Debug {
+
+    static int offset;
+
+    function void debug(String message, int line, boolean useOffset, int column) {
+        do Debug.setCoursor(line,useOffset,0);
+        do Output.printString("       ");
+        do Debug.setCoursor(line,useOffset,column);
+        do Output.printString(message);
+        return;
+    }
+    
+    function void debugInt(int intValue, int line, boolean useOffset, int column) {
+        do Debug.setCoursor(line,useOffset,0);
+        do Output.printString("       ");
+        do Debug.setCoursor(line,useOffset,column);
+        do Output.printInt(intValue);
+        return;
+    }
+
+    function void debugChar(char message, int line, boolean useOffset, int column) {
+        do Debug.setCoursor(line,useOffset,0);
+        do Output.printString("       ");
+        do Debug.setCoursor(line,useOffset,column);
+        do Output.printChar(message);
+        return;
+    }
+
+    function void debugBoolean(boolean val, int line, boolean useOffset, int column) {
+        do Debug.setCoursor(line,useOffset,0);
+        do Output.printString("       ");
+        do Debug.setCoursor(line,useOffset,column);
+        if (val = true) {
+            do Output.printString("true");
+        } else {
+            do Output.printString("false");
+        }
+        return;
+    }
+
+    function void setOffset(int value) {
+        let offset = value;
+        return;
+    }
+
+    function void setCoursor(int line, boolean useOffset, int column) {
+        if (useOffset = true) {
+            do Output.moveCursor(offset,column);
+            let offset = offset + 1;
+            if (offset > 21) {
+                let offset = 0;
+            }
+        } else {
+            do Output.moveCursor(line,column);
+        }
+        return;
+    }
+}

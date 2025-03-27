@@ -1,0 +1,77 @@
+function Random.init 0
+    push argument 0
+    pop static 0
+    push constant 0
+    return
+function Random.next 3
+    push constant 16645
+    push static 0
+    call Math.multiply 2
+    push constant 10139
+    add
+    pop static 0
+    push static 0
+    push static 0
+    push constant 32767
+    call Math.divide 2
+    push constant 32767
+    call Math.multiply 2
+    push argument 0
+    add
+    sub
+    pop static 0
+    push static 0
+    push static 0
+    push constant 513
+    call Math.divide 2
+    push constant 513
+    call Math.multiply 2
+    sub
+    pop local 1
+    push constant 0
+    pop local 2
+label Random_0
+    push local 2
+    push argument 2
+    lt
+    not
+    if-goto Random_1
+    push local 2
+    push argument 1
+    add
+    pop pointer 1
+    push that 0
+    push local 1
+    eq
+    not
+    if-goto Random_3
+    push constant 1
+    neg
+    pop local 0
+    push argument 2
+    pop local 2
+    goto Random_2
+label Random_3
+    push local 2
+    push constant 1
+    add
+    pop local 2
+label Random_2
+    goto Random_0
+label Random_1
+    push local 0
+    push constant 1
+    neg
+    eq
+    not
+    if-goto Random_5
+    push argument 0
+    push argument 1
+    push argument 2
+    call Random.next 3
+    return
+    goto Random_4
+label Random_5
+    push local 1
+    return
+label Random_4

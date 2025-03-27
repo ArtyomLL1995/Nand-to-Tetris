@@ -262,8 +262,8 @@ public class VMTranslator {
     );
 
     private static final List<String> callNewFunctionCommands = Arrays.asList(
-        // Saving current return address into the stack
         "", // here we set return address label based on caller's name 
+        // Saving current return address into the stack
         "D=A\n@SP\nA=M\nM=D\n@SP\nM=M+1",
         // Saving LCL to the stack
         "@LCL\nD=M\n@SP\nA=M\nM=D\n@SP\nM=M+1",
