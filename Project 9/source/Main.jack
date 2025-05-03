@@ -1,9 +1,0 @@
-class Main {
-    function void main() {
-        var SnakeGame game;
-        do SnakeGame.createNewGame();
-        let game = SnakeGame.getCurrentGame();
-        do game.dispose();
-        return;
-    }
-}
