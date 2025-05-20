@@ -43,12 +43,10 @@ public class JackCompiler {
     private static int localCounter = 0;
 
     private static class Variable {
-        String name;
         String type;
         String kind;
         int num;
-        Variable(String name, String type, String kind, int num) {
-            this.name = name;
+        Variable(String type, String kind, int num) {
             this.type = type;
             this.kind = kind;
             this.num = num;
@@ -60,8 +58,6 @@ public class JackCompiler {
     // Symbol table logic
 
     private static Stack<String> statementContextsStack = new Stack<>(); // class, constructor, function, method, if, while
-    
-    private static int baseTabOffset = 0;
 
     private static String prevTerm;
 
@@ -162,9 +158,21 @@ public class JackCompiler {
             prevTerm = "term";
         }
 
+        private static void compileSubroutineAndArray(int startIndex, ArrayList<Token> subExp, ArrayList<Token> expTokens, String divider, Token op) {
+            subExp = getSubExpression(startIndex, divider, expTokens,0);
+            subExp.add(new Token(TokenType.SYMBOL, divider));
+            compileTerm(subExp);
+            if (op != null) {
+                compileOperator(op, false);
+                compileExpression(new ArrayList<>(expTokens.subList(subExp.size()+1, expTokens.size())));
+            } else {
+                compileExpression(new ArrayList<>(expTokens.subList(subExp.size(), expTokens.size())));
+            }
+        }
+
         private static void compileExpression(ArrayList<Token> expTokens) {
 
-            ArrayList<Token> subExp;
+            ArrayList<Token> subExp = new ArrayList<>();
 
             // let x = 5;
             if (expTokens.size() == 1) {
@@ -173,40 +181,24 @@ public class JackCompiler {
 
             } else if (expTokens.size() > 1) {
 
-                // Handling parentheses terms: let x = (x + 5) ...
+                // Handling parentheses: let x = (x + 5) ...
                 if (expTokens.get(0).value.equals("(")) {
-
-                    subExp = getSubExpression(0, ")", expTokens,0);
-                    subExp.add(new Token(TokenType.SYMBOL, ")"));
-                    compileTerm(subExp);
-                    compileExpression(new ArrayList<>(expTokens.subList(subExp.size(), expTokens.size())));
+                    compileSubroutineAndArray(0, subExp, expTokens, ")", null);
                 } 
 
                 // Handling subroutine calls: let x = class.callFunc(55) ...
                 else if (expTokens.get(0).type == TokenType.IDENTIFIER && expTokens.get(1).value.equals(".")) {
-                   
-                    subExp = getSubExpression(0, ")", expTokens,0);
-                    subExp.add(new Token(TokenType.SYMBOL, ")"));
-                    compileTerm(subExp);
-                    compileExpression(new ArrayList<>(expTokens.subList(subExp.size(), expTokens.size())));
+                    compileSubroutineAndArray(0, subExp, expTokens, ")", null);
                 } 
 
                 // Handling subroutine method calls: let x = callFunc(55) ...
                 else if (expTokens.get(0).type == TokenType.IDENTIFIER && expTokens.get(1).value.equals("(")) {
-
-                    subExp = getSubExpression(0, ")", expTokens,0);
-                    subExp.add(new Token(TokenType.SYMBOL, ")"));
-                    compileTerm(subExp);
-                    compileExpression(new ArrayList<>(expTokens.subList(subExp.size(), expTokens.size())));
+                    compileSubroutineAndArray(0, subExp, expTokens, ")", null);
                 }
 
                 // Handling array access: let x = arr[5] ...
                 else if (expTokens.get(0).type == TokenType.IDENTIFIER && expTokens.get(1).value.equals("[")) {
-
-                    subExp = getSubExpression(0, "]", expTokens,0);
-                    subExp.add(new Token(TokenType.SYMBOL, "]"));
-                    compileTerm(subExp);
-                    compileExpression(new ArrayList<>(expTokens.subList(subExp.size(), expTokens.size())));
+                    compileSubroutineAndArray(0, subExp, expTokens, "]", null);
                 }
 
                 else if (mathSymbols.contains(expTokens.get(0).value)) {
@@ -222,78 +214,37 @@ public class JackCompiler {
                     } else {
                         
                         prevTerm = "operator";
-                        int subExpressionSize = 0;
 
-                        // ... + (x - 7) ... (handling parentheses)
+                        //  ... + (x - 7) ... (handling parentheses)
                         if (expTokens.get(1).value.equals("(")) {
-
-                            subExp = getSubExpression(1, ")", expTokens,0);
-                            subExp.add(new Token(TokenType.SYMBOL, ")"));
-                            subExpressionSize = subExp.size();
-                            compileTerm(subExp);
+                            compileSubroutineAndArray(1,subExp, expTokens, ")", expTokens.get(0));
                         } 
-
-                        // ... + class.subroutineCall(x) ... (handling subroutine calls)
-                        else if (
-                            expTokens.get(1).type == TokenType.IDENTIFIER && 
-                            expTokens.size() > 2 && 
-                            expTokens.get(2).value.equals(".")
-                        ) {
-
-                            subExp = getSubExpression(1, ")", expTokens,0);
-                            subExp.add(new Token(TokenType.SYMBOL, ")"));
-                            subExpressionSize = subExp.size();
-                            compileTerm(subExp);
+                        
+                        // ... + Class.callFunc() ... (handling subroutine calls / methods / arrays)
+                        else if (expTokens.get(1).type == TokenType.IDENTIFIER && expTokens.size() > 2) {
+                            if (".([".contains(expTokens.get(2).value)) {
+                                String divider = expTokens.get(2).value.equals("[") ? "]" : ")";
+                                compileSubroutineAndArray(1,subExp, expTokens, divider, expTokens.get(0));
+                            }
                         }
 
-                        // ... + subroutineCall(x) ... (handling subroutine method calls)
-                        else if (
-                            expTokens.get(1).type == TokenType.IDENTIFIER && 
-                            expTokens.size() > 2 && 
-                            expTokens.get(2).value.equals("(")
-                        ) {
-
-                            subExp = getSubExpression(1, ")", expTokens,0);
-                            subExp.add(new Token(TokenType.SYMBOL, ")"));
-                            subExpressionSize = subExp.size();
-                            compileTerm(subExp);
-                        }
-
-                        // ... + arr[1] ... (handling array access)
-                        else if (
-                            expTokens.get(1).type == TokenType.IDENTIFIER && 
-                            expTokens.size() > 2 &&
-                            expTokens.get(2).value.equals("[")
-                        ) {
-
-                            subExp = getSubExpression(1, "]", expTokens,0);
-                            subExp.add(new Token(TokenType.SYMBOL, "]"));
-                            subExpressionSize = subExp.size();
-                            compileTerm(subExp);
-                        }
-
-                        // ... + -99... (handling unary operators)
-                        else if (
-                            expTokens.get(1).value.equals("-") || 
-                            expTokens.get(1).value.equals("~")
-                        ) {
-                            subExp = getSubExpression(1,"unary",expTokens,1);
-                            compileTerm(subExp);
-                            subExpressionSize = subExp.size();
+                        // ... + -99 ... (handling unary operators)
+                        else if (expTokens.get(1).value.equals("-") || expTokens.get(1).value.equals("~")) {
+                            compileSubroutineAndArray(1,subExp, expTokens, "unary", expTokens.get(0));
                         } 
 
                         // ... + x ... 
                         else {
                             subExp = new ArrayList<>();
                             subExp.add(expTokens.get(1));
-                            subExpressionSize = 1;
                             compileTerm(subExp);
+                            compileOperator(expTokens.get(0), false);
+                            compileExpression(new ArrayList<>(expTokens.subList(2, expTokens.size())));
                         }
-                        
-                        compileOperator(expTokens.get(0), false);
-                        compileExpression(new ArrayList<>(expTokens.subList(subExpressionSize + 1, expTokens.size())));
                     }
-                } else {
+                } 
+                // let x = b ...
+                else {
                     compileTerm(new ArrayList<>(expTokens.subList(0, 1)));
                     compileExpression(new ArrayList<>(expTokens.subList(1, expTokens.size())));
                 }
@@ -326,7 +277,7 @@ public class JackCompiler {
             }
         }
 
-        private static void compileLetStatement(int tabOffset) {
+        private static void compileLetStatement() {
             ArrayList<Token> subExpression;        
             if (currentTokenPhrase.get(2).value.equals("[")) {
                 Variable arrVar = getVar(currentTokenPhrase.get(1).value);
@@ -348,7 +299,7 @@ public class JackCompiler {
             }
         }
 
-        private static void compileIfStatement(int tabOffset) {
+        private static void compileIfStatement() {
             statementContextsStack.push(currentClassName + "_IF_" + ifCounter);
             ArrayList<Token> subExpression = getSubExpression(2, ")", currentTokenPhrase,1);
             compileExpression(subExpression);
@@ -407,7 +358,6 @@ public class JackCompiler {
                 }
                 ArrayList<Token> currentSubList = getSubExpression(0, ",", classVarList,1);
                 symbolTabel.put(currentSubList.get(0).value, new Variable(
-                    currentSubList.get(0).value, 
                     type, 
                     kind, 
                     currentCounter
@@ -422,7 +372,6 @@ public class JackCompiler {
         private static void processArguments(ArrayList<Token> arguments, boolean setThis) {
             if (setThis) {
                 subroutineSymbolTable.put("this", new Variable(
-                    "this", 
                     currentClassName, 
                     "argument", 
                     0
@@ -432,7 +381,6 @@ public class JackCompiler {
             if (arguments.size() > 0) {
                 ArrayList<Token> currentArgument = getSubExpression(0, ",", arguments,1);
                 subroutineSymbolTable.put(currentArgument.get(1).value, new Variable(
-                    currentArgument.get(1).value, 
                     currentArgument.get(0).value, 
                     "argument", 
                     argumentCounter
@@ -619,7 +567,6 @@ public class JackCompiler {
         String currentSubroutineOpen = divider.contains(")") ? "(" : divider.contains("]") ? "[" : null;
         for (int i = startIndex; i < inputTokenPhrase.size(); i++) {
             Token token = inputTokenPhrase.get(i);
-            //System.out.println("VAL: " + token.value);
             if (!divider.contains("unary")) {
                 if (token.type == TokenType.SYMBOL) {
                     if (token.value.equals(currentSubroutineOpen)) {
@@ -633,11 +580,8 @@ public class JackCompiler {
                 }
                 subPhrase.add(token);
             } else {
-                //System.out.println("VAL: " + token.value);
                 subPhrase.add(token);
-
                 if (i+1 == inputTokenPhrase.size()) {
-                    System.out.println("BREAK 1: ");
                     break;
                 } else if (
                     token.type != TokenType.SYMBOL && 
@@ -647,7 +591,6 @@ public class JackCompiler {
                     !inputTokenPhrase.get(i+1).value.equals(")") && 
                     !inputTokenPhrase.get(i+1).value.equals("]") && 
                     openParenthesesCount == 1) {
-                    System.out.println("BREAK 2: ");
                     break;
                 } else if (token.value.equals("(") || token.value.equals("[")) {
                     openParenthesesCount++;
@@ -655,13 +598,10 @@ public class JackCompiler {
                 } else if (token.value.equals(")") || token.value.equals("]")) {
                     openParenthesesCount--;
                     if (openParenthesesCount == 1) {
-                        System.out.println("BREAK 3: ");
                         break;
                     }
                 }
-
                 if (openParenthesesCount == 0) {
-                    System.out.println("BREAK 4: ");
                     break;
                 }
             }
@@ -684,11 +624,11 @@ public class JackCompiler {
         }
         if (startToken.type == TokenType.KEYWORD) {
             if (startToken.value.equals("let")) {
-                checkLetStatementValidity(baseTabOffset);
+                checkLetStatementValidity();
             } else if (startToken.value.equals("if")) {
-                checkIfStatementValidity(baseTabOffset);
+                checkIfStatementValidity();
             } else if (startToken.value.equals("else")) {
-                checkElseStatementValidity(baseTabOffset);
+                checkElseStatementValidity();
             } else if (startToken.value.equals("while")) {
                 checkWhileStatementValidity();
             } else if (startToken.value.equals("class")) {
@@ -749,7 +689,6 @@ public class JackCompiler {
     private static void checkSubroutineStatementValidity() {
         if (currentTokenPhrase.get(currentTokenPhrase.size() - 1).value.equals("{")) {
             CompilationEngine.compileSubroutineStatement();
-            baseTabOffset+=2;
             currentTokenPhrase.clear();
         }
     }
@@ -764,26 +703,25 @@ public class JackCompiler {
     private static void checkClassStatementValidity() {
         if (currentTokenPhrase.get(currentTokenPhrase.size() - 1).value.equals("{")) {
             CompilationEngine.compileClassStatement();
-            baseTabOffset+=2;
             currentTokenPhrase.clear();
         }
     }
 
-    private static void checkLetStatementValidity(int tabOffset) {
+    private static void checkLetStatementValidity() {
         if (currentTokenPhrase.get(currentTokenPhrase.size() - 1).value.equals(";")) {
-            CompilationEngine.compileLetStatement(tabOffset);
+            CompilationEngine.compileLetStatement();
             currentTokenPhrase.clear();
         } 
     }
 
-    private static void checkIfStatementValidity(int tabOffset) {
+    private static void checkIfStatementValidity() {
         if (currentTokenPhrase.get(currentTokenPhrase.size() - 1).value.equals("{")) {
-            CompilationEngine.compileIfStatement(tabOffset);
+            CompilationEngine.compileIfStatement();
             currentTokenPhrase.clear();
         }
     }
 
-    private static void checkElseStatementValidity(int tabOffset) {
+    private static void checkElseStatementValidity() {
         if (currentTokenPhrase.get(currentTokenPhrase.size() - 1).value.equals("{")) {
             currentTokenPhrase.clear();
         }
@@ -796,23 +734,23 @@ public class JackCompiler {
         }
     }
 
-    private static void printTokens(ArrayList<Token> tokens) {
-        System.out.println("Start Tokens:");
-        for (Token token : tokens) {
-            if (token.type == TokenType.KEYWORD) {
-                System.out.println("Keyword: " + token.value);
-            } else if (token.type == TokenType.IDENTIFIER) {
-                System.out.println("Identifier: " + token.value);
-            } else if (token.type == TokenType.STRING_CONSTANT) {
-                System.out.println("String Constant: " + token.value);
-            } else if (token.type == TokenType.INT_CONSTANT) {
-                System.out.println("Integer Constant: " + token.value);
-            } else if (token.type == TokenType.SYMBOL) {
-                System.out.println("Symbol: " + token.value);
-            }
-        }
-        System.out.println("End Tokens:");
-    }
+    // private static void printTokens(ArrayList<Token> tokens) {
+    //     System.out.println("Start Tokens:");
+    //     for (Token token : tokens) {
+    //         if (token.type == TokenType.KEYWORD) {
+    //             System.out.println("Keyword: " + token.value);
+    //         } else if (token.type == TokenType.IDENTIFIER) {
+    //             System.out.println("Identifier: " + token.value);
+    //         } else if (token.type == TokenType.STRING_CONSTANT) {
+    //             System.out.println("String Constant: " + token.value);
+    //         } else if (token.type == TokenType.INT_CONSTANT) {
+    //             System.out.println("Integer Constant: " + token.value);
+    //         } else if (token.type == TokenType.SYMBOL) {
+    //             System.out.println("Symbol: " + token.value);
+    //         }
+    //     }
+    //     System.out.println("End Tokens:");
+    // }
 
     private static StringBuilder compilerCodeBuilder;
 
@@ -869,7 +807,6 @@ public class JackCompiler {
             for (File file : files) {
                 String outputFileName = file.getAbsolutePath().replace(".jack", ".vm");
                 secondPass(file, outputFileName);
-                baseTabOffset = 0;
                 currentTokenPhrase.clear();
                 statementContextsStack.clear();
                 classSymbolTable.clear();
