@@ -131,7 +131,7 @@ public class JackAnalyzer {
                     } else if (expressionTokens.get(i).value.equals("-") || expressionTokens.get(i).value.equals("~")) {
                         if (currentTerm == null) {
                             Token nextToken = expressionTokens.get(i+1);
-                            // Handling cases like: ~(key = 0)
+                            // Handling cases like: ~(key = 0) or -(5 + 9)
                             if (nextToken.value.equals("(")) {
                                 currentTerm = getSubExpression(i, ")", expressionTokens);
                             } else {
