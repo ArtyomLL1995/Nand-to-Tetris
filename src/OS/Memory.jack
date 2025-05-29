@@ -1,0 +1,19 @@
+class Memory {
+
+    static Array arr;
+
+    function void init() {
+        let arr = 0;
+        return;
+    }
+
+    function int peek(int addr) {
+        return arr[addr];
+    }
+
+    function void poke(int addr, int val) {
+        let arr[addr] = val;
+        return;
+    }
+
+}

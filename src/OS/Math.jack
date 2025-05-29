@@ -1,0 +1,123 @@
+class Math {
+
+    static Array powers_of_two;
+    
+    function void init() {
+        let powers_of_two = Array.new(16);
+        let powers_of_two[0] = 1;
+        let powers_of_two[1] = 2;
+        let powers_of_two[2] = 4;
+        let powers_of_two[3] = 8;
+        let powers_of_two[4] = 16;
+        let powers_of_two[5] = 32;
+        let powers_of_two[6] = 64;
+        let powers_of_two[7] = 128;
+        let powers_of_two[8] = 256;
+        let powers_of_two[9] = 512;
+        let powers_of_two[10] = 1024;
+        let powers_of_two[11] = 2048;
+        let powers_of_two[12] = 4096;
+        let powers_of_two[13] = 8192;
+        let powers_of_two[14] = 16384;
+        let powers_of_two[15] = 16384+16384;
+        return;
+    }
+
+    function int bit(int y, int n) {
+        return ~((y & powers_of_two[n]) = 0);
+    }
+
+    function int multiply(int x, int y) {
+        var int j, sum, shiftedX;
+        let sum = 0;
+        let shiftedX = x;
+        let j = 0;
+        while(j < 16) {  
+            if(Math.bit(y, j)) {
+                let sum = sum + shiftedX;
+            }
+            let shiftedX = shiftedX + shiftedX;
+            let j = j + 1;
+        }
+        return sum;
+    }
+    
+    function int divide(int x, int y) {
+
+        var int q, sign;
+
+        if (
+            ((x < 0) & (y < 0)) | 
+            ((x > 0) & (y > 0))
+        ) {
+            let sign = 0;
+        } else {
+            let sign = -1;
+        }
+
+        let x = Math.abs(x);
+        let y = Math.abs(y);
+
+        let q = Math.calcDivision(x,y);
+
+        if (sign = -1) {
+            let q = -q;
+        }
+
+        return q;
+    }
+
+    function int calcDivision(int x, int y) {
+        var int q;
+        if ((x < y) | (y < 0)) {
+            let q = 0;
+        } else {
+            let q = Math.calcDivision(x, 2 * y);
+            if ((x - (2 * q * y)) < y) {
+                let q = 2 * q;
+            } else {
+                let q = (2 * q) + 1;
+            }
+        }
+        return q;
+    }
+
+    function int sqrt(int x) {
+        var int i, result, temp;
+        let result = 0;
+        let i = 7;
+        while (i > -1) {
+            let temp = result + powers_of_two[i];
+            if ((~((temp * temp) > x)) & ((temp * temp) > 0)) {
+                let result = temp;
+            }
+            let i = i - 1;
+        }
+        return result;
+    }
+
+    function int min(int x, int y) {
+        if (x > y) {
+            return y;
+        } else {
+            return x;
+        }
+    }
+
+    function int max(int x, int y) {
+        if (x > y) {
+            return x;
+        } else {
+            return y;
+        }
+    }
+
+    function int abs(int x) {
+        if (x < 0) {
+            return -x;
+        } else {
+            return x;
+        }
+    }
+
+}

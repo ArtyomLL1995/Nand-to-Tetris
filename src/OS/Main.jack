@@ -1,0 +1,9 @@
+class Main {
+
+    function void main() {
+        do Memory.init();
+        do Memory.poke(555, 99);
+        do Output.printInt(Memory.peek(555));
+    }
+
+}
