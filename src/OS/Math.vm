@@ -1,5 +1,7 @@
 
 function Math.init 0
+push constant 0
+pop static 1
 push constant 16
 call Array.new 1
 pop static 0
@@ -133,6 +135,7 @@ pop temp 0
 pop pointer 1
 push temp 0
 pop that 0
+push constant 0
 return
 function Math.bit 0
 push argument 0
@@ -181,54 +184,30 @@ goto Math_WHILE_0
 label Math_WHILE_0_END
 push local 1
 return
-function Math.divide 2
-push argument 0
-push constant 0
-lt
-push argument 1
-push constant 0
-lt
-and
-push argument 0
-push constant 0
-gt
-push argument 1
-push constant 0
-gt
-and
-or
-not
-if-goto Math_IF_1
-push constant 0
-pop local 1
-goto Math_ELSE_0
-label Math_IF_1
-push constant 1
-neg
-pop local 1
-label Math_ELSE_0
+function Math.divide 1
 push argument 0
 call Math.abs 1
-pop argument 0
 push argument 1
 call Math.abs 1
-pop argument 1
-push argument 0
-push argument 1
 call Math.calcDivision 2
 pop local 0
-push local 1
-push constant 1
-neg
+push argument 0
+push constant 0
+lt
+push argument 1
+push constant 0
+lt
 eq
 not
-if-goto Math_IF_2
-push local 0
-neg
-pop local 0
-label Math_IF_2
+if-goto Math_IF_1
 push local 0
 return
+goto Math_ELSE_0
+label Math_IF_1
+push local 0
+neg
+return
+label Math_ELSE_0
 function Math.calcDivision 1
 push argument 0
 push argument 1
@@ -238,37 +217,41 @@ push constant 0
 lt
 or
 not
-if-goto Math_IF_3
+if-goto Math_IF_2
 push constant 0
 pop local 0
 goto Math_ELSE_1
-label Math_IF_3
+label Math_IF_2
 push argument 0
-push constant 2
 push argument 1
-call Math.multiply 2
+push argument 1
+add
 call Math.calcDivision 2
 pop local 0
+push static 1
+push constant 1
+add
+pop static 1
 push argument 0
-push constant 2
 push local 0
-call Math.multiply 2
+push local 0
+add
 push argument 1
 call Math.multiply 2
 sub
 push argument 1
 lt
 not
-if-goto Math_IF_4
-push constant 2
+if-goto Math_IF_3
 push local 0
-call Math.multiply 2
+push local 0
+add
 pop local 0
 goto Math_ELSE_2
-label Math_IF_4
-push constant 2
+label Math_IF_3
 push local 0
-call Math.multiply 2
+push local 0
+add
 push constant 1
 add
 pop local 0
@@ -309,10 +292,10 @@ push constant 0
 gt
 and
 not
-if-goto Math_IF_5
+if-goto Math_IF_4
 push local 2
 pop local 1
-label Math_IF_5
+label Math_IF_4
 push local 0
 push constant 1
 sub
@@ -326,11 +309,11 @@ push argument 0
 push argument 1
 gt
 not
-if-goto Math_IF_6
+if-goto Math_IF_5
 push argument 1
 return
 goto Math_ELSE_3
-label Math_IF_6
+label Math_IF_5
 push argument 0
 return
 label Math_ELSE_3
@@ -339,11 +322,11 @@ push argument 0
 push argument 1
 gt
 not
-if-goto Math_IF_7
+if-goto Math_IF_6
 push argument 0
 return
 goto Math_ELSE_4
-label Math_IF_7
+label Math_IF_6
 push argument 1
 return
 label Math_ELSE_4
@@ -352,12 +335,15 @@ push argument 0
 push constant 0
 lt
 not
-if-goto Math_IF_8
+if-goto Math_IF_7
 push argument 0
 neg
 return
 goto Math_ELSE_5
-label Math_IF_8
+label Math_IF_7
 push argument 0
 return
 label Math_ELSE_5
+function Math.getPowersOfTwo 0
+push static 0
+return

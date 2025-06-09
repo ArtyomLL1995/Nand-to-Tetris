@@ -1,0 +1,128 @@
+class String {
+
+    static Array intStr;
+    static int intStrCounter;
+
+    field Array str;
+    field int length;
+
+    constructor String new(int maxLength) {
+        if (maxLength < 1) { let maxLength = 1; }
+        let str = Array.new(maxLength);
+        let intStr = Array.new(5);
+        let intStrCounter = 0;
+        let length = 0;
+        return this;
+    }
+
+    method void setInt(int val) {
+        var int len;
+        var int temp;
+        var int factor;
+        let len = 0;
+        let length = 0;             // reset str
+        if (val < 0) {
+            let len = len + 1;      // the addition one is for '-'
+            do appendChar(45);      // '-'
+            let val = val * (-1);
+        }
+        let temp = val;
+        let factor = 1;
+
+        // count length
+        while((temp / 10) > 0) {
+            let len = len + 1;
+            let temp = temp / 10;
+            let factor = factor * 10;
+        }
+        let len = len + 1;      // integer has at least one digit
+
+        // set string
+        while(factor > 0) {
+            do appendChar((val/factor)+48);
+            let val = val - (factor * (val / factor));
+            let factor = factor / 10;
+        }
+        return;
+    }
+
+    method String appendChar(char c) {
+        let str[length] = c;
+        let length = length + 1;
+        return this;
+    }
+
+    method int length() {
+        return length;
+    }
+
+    method char charAt(int j) {
+        return str[j];
+    }
+
+    method void setCharAt(int j, char c) {
+        let str[j] = c;
+        return;
+    }
+
+    method void eraseLastChar() {
+        let str[length] = -1;
+        let length = length - 1;
+        return;
+    }
+
+    method void dispose() {
+        do str.dispose();
+        do Memory.deAlloc(this);
+        return;
+    }
+
+    method void clearString() {
+        var int i;
+        let i = length;
+        while (i > 0) {
+            do eraseLastChar();
+            let i = i - 1;
+        }
+        return;
+    }
+
+    method int intValue() {
+        var int val, i, negative;
+        var char c;
+        let val = 0;
+        let i = 0;
+        while (i < length) {
+            let c = charAt(i);
+            if (c = 45) {
+                let negative = -1;
+                let i = i + 1;
+            } else {
+                if ((c < 48) | (c > 57)) {
+                    let i = length;
+                } else {
+                    let val = (val * 10) + (Math.abs(48 - c));
+                    let i = i + 1;
+                }
+            }
+        }
+        if (negative = -1) {
+            return val;
+        } else {
+            return -val;
+        }
+    }
+
+    function char newLine() {
+        return 128;
+    }
+
+    function char backSpace() {
+        return 129;
+    }
+
+    function char doubleQuote() {
+        return 34;
+    }
+
+}

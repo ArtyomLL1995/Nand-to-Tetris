@@ -1,5 +1,6 @@
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -218,13 +219,16 @@ public class HackAssembler {
     
 
     public static void main(String[] args) throws Exception {
-        // Source .asm file path
-        String sourceFilePath = "Mult.asm";
-        // Destination .hack file path
-        String destinationFilePath = "Mult.hack";
 
-        // Call the method to copy the file
-        firstPass(sourceFilePath);
-        secondPass(sourceFilePath, destinationFilePath);
+        File inputFile = new File(args[0]);
+        if (inputFile.isFile() && args[0].endsWith(".asm")) {
+            String outputFileName = args[0].replace(".asm", ".hack");
+             // Source .asm file path
+            String sourceFilePath = inputFile.getName();
+            // Destination .hack file path
+             // Call the method to copy the file
+            firstPass(sourceFilePath);
+            secondPass(sourceFilePath, outputFileName);
+        }
     }
 }

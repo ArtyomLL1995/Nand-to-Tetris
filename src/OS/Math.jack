@@ -1,32 +1,35 @@
 class Math {
 
-    static Array powers_of_two;
+    static Array powersOfTwo;
+    static int test;
     
     function void init() {
-        let powers_of_two = Array.new(16);
-        let powers_of_two[0] = 1;
-        let powers_of_two[1] = 2;
-        let powers_of_two[2] = 4;
-        let powers_of_two[3] = 8;
-        let powers_of_two[4] = 16;
-        let powers_of_two[5] = 32;
-        let powers_of_two[6] = 64;
-        let powers_of_two[7] = 128;
-        let powers_of_two[8] = 256;
-        let powers_of_two[9] = 512;
-        let powers_of_two[10] = 1024;
-        let powers_of_two[11] = 2048;
-        let powers_of_two[12] = 4096;
-        let powers_of_two[13] = 8192;
-        let powers_of_two[14] = 16384;
-        let powers_of_two[15] = 16384+16384;
+        let test = 0;
+        let powersOfTwo = Array.new(16);
+        let powersOfTwo[0] = 1;
+        let powersOfTwo[1] = 2;
+        let powersOfTwo[2] = 4;
+        let powersOfTwo[3] = 8;
+        let powersOfTwo[4] = 16;
+        let powersOfTwo[5] = 32;
+        let powersOfTwo[6] = 64;
+        let powersOfTwo[7] = 128;
+        let powersOfTwo[8] = 256;
+        let powersOfTwo[9] = 512;
+        let powersOfTwo[10] = 1024;
+        let powersOfTwo[11] = 2048;
+        let powersOfTwo[12] = 4096;
+        let powersOfTwo[13] = 8192;
+        let powersOfTwo[14] = 16384;
+        let powersOfTwo[15] = 16384+16384;
         return;
     }
 
     function int bit(int y, int n) {
-        return ~((y & powers_of_two[n]) = 0);
+        return ~((y & powersOfTwo[n]) = 0);
     }
 
+    // 48 additions
     function int multiply(int x, int y) {
         var int j, sum, shiftedX;
         let sum = 0;
@@ -41,42 +44,30 @@ class Math {
         }
         return sum;
     }
-    
+   
+    // 15 multiply
     function int divide(int x, int y) {
-
-        var int q, sign;
-
-        if (
-            ((x < 0) & (y < 0)) | 
-            ((x > 0) & (y > 0))
-        ) {
-            let sign = 0;
+        var int q;
+        let q = Math.calcDivision(Math.abs(x),Math.abs(y));
+        if ((x < 0) = (y < 0)) {
+            return q;
         } else {
-            let sign = -1;
+            return -q;
         }
 
-        let x = Math.abs(x);
-        let y = Math.abs(y);
-
-        let q = Math.calcDivision(x,y);
-
-        if (sign = -1) {
-            let q = -q;
-        }
-
-        return q;
     }
-
+    
     function int calcDivision(int x, int y) {
         var int q;
         if ((x < y) | (y < 0)) {
             let q = 0;
         } else {
-            let q = Math.calcDivision(x, 2 * y);
-            if ((x - (2 * q * y)) < y) {
-                let q = 2 * q;
+            let q = Math.calcDivision(x, y + y);
+            let test = test + 1;
+            if ((x - ((q + q) * y)) < y) {
+                let q = q + q;
             } else {
-                let q = (2 * q) + 1;
+                let q = q + q + 1;
             }
         }
         return q;
@@ -87,7 +78,7 @@ class Math {
         let result = 0;
         let i = 7;
         while (i > -1) {
-            let temp = result + powers_of_two[i];
+            let temp = result + powersOfTwo[i];
             if ((~((temp * temp) > x)) & ((temp * temp) > 0)) {
                 let result = temp;
             }
@@ -118,6 +109,10 @@ class Math {
         } else {
             return x;
         }
+    }
+
+    function Array getPowersOfTwo() {
+        return powersOfTwo;
     }
 
 }
