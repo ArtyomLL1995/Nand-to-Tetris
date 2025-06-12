@@ -13,19 +13,6 @@ public class JackAnalyzer {
 
     private static BufferedWriter writer;
 
-    private static enum TokenType {
-        KEYWORD, IDENTIFIER, STRING_CONSTANT, INT_CONSTANT, SYMBOL
-    }
-
-    private static class Token {
-        TokenType type;
-        String value;
-        Token(TokenType type, String value) {
-            this.type = type;
-            this.value = value;
-        }
-    }
-
     private static ArrayList<Token> currentTokenPhrase = new ArrayList<>();
 
     private static Boolean isFirstStatment = true;
@@ -57,7 +44,7 @@ public class JackAnalyzer {
             int i = 0;
             while (i < termTokens.size()) {
                 Token token = termTokens.get(i);
-                if (token.type == TokenType.SYMBOL) {
+                if (token.type == Token.TokenType.SYMBOL) {
                     if (token.value.equals("(") || token.value.equals("[")) {
                         String divider = token.value.equals("(") ? ")" : "]";
                         CompilationEngine.addNewLine(tabOffset+1, "<symbol> "  + token.value + " </symbol>", writer);
@@ -80,13 +67,13 @@ public class JackAnalyzer {
                         break;
                     }
                 } else {
-                    if (token.type == TokenType.IDENTIFIER) {
+                    if (token.type == Token.TokenType.IDENTIFIER) {
                         CompilationEngine.addNewLine(tabOffset+1, "<identifier> "+token.value+" </identifier>", writer);
-                    } else if (token.type == TokenType.INT_CONSTANT) {
+                    } else if (token.type == Token.TokenType.INT_CONSTANT) {
                         CompilationEngine.addNewLine(tabOffset+1, "<integerConstant> "+token.value+" </integerConstant>", writer);
-                    } else if (token.type == TokenType.STRING_CONSTANT) {
+                    } else if (token.type == Token.TokenType.STRING_CONSTANT) {
                         CompilationEngine.addNewLine(tabOffset+1, "<stringConstant> "+token.value+" </stringConstant>", writer);
-                    } else if (token.type == TokenType.KEYWORD) {
+                    } else if (token.type == Token.TokenType.KEYWORD) {
                         CompilationEngine.addNewLine(tabOffset+1, "<keyword> "+token.value+" </keyword>", writer);
                     }
                     i++;
@@ -121,11 +108,11 @@ public class JackAnalyzer {
             ArrayList<Token> currentTerm = null;
             int i = 0;
             while (i < expressionTokens.size()) {
-                if (expressionTokens.get(i).type == TokenType.SYMBOL) {
+                if (expressionTokens.get(i).type == Token.TokenType.SYMBOL) {
                     if (expressionTokens.get(i).value.equals("(")) {
                         currentTerm = getSubExpression(i+1, ")", expressionTokens);
-                        currentTerm.add(0,new Token(TokenType.SYMBOL, "("));
-                        currentTerm.add(new Token(TokenType.SYMBOL, ")"));
+                        currentTerm.add(0,new Token(Token.TokenType.SYMBOL, "("));
+                        currentTerm.add(new Token(Token.TokenType.SYMBOL, ")"));
                         compileTerm(currentTerm, tabOffset+2);
                         i = i + currentTerm.size();
                     } else if (expressionTokens.get(i).value.equals("-") || expressionTokens.get(i).value.equals("~")) {
@@ -236,9 +223,9 @@ public class JackAnalyzer {
         private static void compileClassVarStatement() {
             CompilationEngine.addNewLine(baseTabOffset, "<classVarDec>", writer);
             CompilationEngine.addNewLine(baseTabOffset + 1, "<keyword> " + currentTokenPhrase.get(0).value + " </keyword>", writer);
-            if (currentTokenPhrase.get(1).type == TokenType.KEYWORD) {
+            if (currentTokenPhrase.get(1).type == Token.TokenType.KEYWORD) {
                 CompilationEngine.addNewLine(baseTabOffset + 1, "<keyword> " + currentTokenPhrase.get(1).value + " </keyword>", writer);
-            } else if (currentTokenPhrase.get(1).type == TokenType.IDENTIFIER) {
+            } else if (currentTokenPhrase.get(1).type == Token.TokenType.IDENTIFIER) {
                 CompilationEngine.addNewLine(baseTabOffset + 1, "<identifier> " + currentTokenPhrase.get(1).value + " </identifier>", writer);
             }
             processClassVarList(getSubExpression(2, ";", currentTokenPhrase), baseTabOffset + 1, false);
@@ -266,7 +253,7 @@ public class JackAnalyzer {
         private static void compileVarStatement(int tabOffset) {
             CompilationEngine.addNewLine(tabOffset, "<varDec>", writer);
             CompilationEngine.addNewLine(tabOffset+1, "<keyword> var </keyword>", writer);
-            if (currentTokenPhrase.get(1).type == TokenType.KEYWORD) {
+            if (currentTokenPhrase.get(1).type == Token.TokenType.KEYWORD) {
                 CompilationEngine.addNewLine(tabOffset+1, "<keyword> " + currentTokenPhrase.get(1).value + " </keyword>", writer);
             } else {
                 CompilationEngine.addNewLine(tabOffset+1, "<identifier> " + currentTokenPhrase.get(1).value + " </identifier>", writer);
@@ -280,9 +267,9 @@ public class JackAnalyzer {
             statementContextsStack.push(currentTokenPhrase.get(0).value);
             CompilationEngine.addNewLine(baseTabOffset, "<subroutineDec>", writer);
             CompilationEngine.addNewLine(baseTabOffset + 1, "<keyword> " + currentTokenPhrase.get(0).value + " </keyword>", writer);
-            if (currentTokenPhrase.get(1).type == TokenType.KEYWORD) {
+            if (currentTokenPhrase.get(1).type == Token.TokenType.KEYWORD) {
                 CompilationEngine.addNewLine(baseTabOffset + 1, "<keyword> " + currentTokenPhrase.get(1).value + " </keyword>", writer);
-            } else if (currentTokenPhrase.get(1).type == TokenType.IDENTIFIER) {
+            } else if (currentTokenPhrase.get(1).type == Token.TokenType.IDENTIFIER) {
                 CompilationEngine.addNewLine(baseTabOffset + 1, "<identifier> " + currentTokenPhrase.get(1).value + " </identifier>", writer);
             }
             CompilationEngine.addNewLine(baseTabOffset + 1, "<identifier> " + currentTokenPhrase.get(2).value + " </identifier>", writer);
@@ -397,7 +384,7 @@ public class JackAnalyzer {
                 } else if (c != '\"' && processingStringConst == true) {
                     currentToken += c;
                 } else if (c == '\"' && processingStringConst == true) {
-                    currentTokenPhrase.add(new Token(TokenType.STRING_CONSTANT, currentToken));
+                    currentTokenPhrase.add(new Token(Token.TokenType.STRING_CONSTANT, currentToken));
                     processingStringConst = false;
                     currentToken = "";
                     checkCurrentTokenPhraseValidity();
@@ -405,7 +392,7 @@ public class JackAnalyzer {
                     prepareToken(currentToken);
                     currentToken = "";
                     if (symbols.contains(String.valueOf(c))) {
-                        currentTokenPhrase.add(new Token(TokenType.SYMBOL, String.valueOf(c)));
+                        currentTokenPhrase.add(new Token(Token.TokenType.SYMBOL, String.valueOf(c)));
                         checkCurrentTokenPhraseValidity();
                     }
                 } else {
@@ -434,13 +421,13 @@ public class JackAnalyzer {
     private static void prepareToken(String currentToken) {
         if (currentToken.length() > 0) {
             if (keywords.contains(currentToken)) {
-                currentTokenPhrase.add(new Token(TokenType.KEYWORD, currentToken));
+                currentTokenPhrase.add(new Token(Token.TokenType.KEYWORD, currentToken));
                 checkCurrentTokenPhraseValidity();
             } else if (Character.isDigit(currentToken.charAt(0))) {
-                currentTokenPhrase.add(new Token(TokenType.INT_CONSTANT, currentToken));
+                currentTokenPhrase.add(new Token(Token.TokenType.INT_CONSTANT, currentToken));
                 checkCurrentTokenPhraseValidity();
             } else {
-                currentTokenPhrase.add(new Token(TokenType.IDENTIFIER, currentToken));
+                currentTokenPhrase.add(new Token(Token.TokenType.IDENTIFIER, currentToken));
                 checkCurrentTokenPhraseValidity();
             }
         }
@@ -452,7 +439,7 @@ public class JackAnalyzer {
         String currentSubroutineOpen = divider.contains(")") ? "(" : divider.contains("]") ? "[" : null;
         for (int i = startIndex; i < inputTokenPhrase.size(); i++) {
             Token token = inputTokenPhrase.get(i);
-            if (token.type == TokenType.SYMBOL) {
+            if (token.type == Token.TokenType.SYMBOL) {
                 if (token.value.equals(currentSubroutineOpen)) {
                     openParenthesesCount++;
                 } else if (divider.contains(token.value)) {
@@ -480,7 +467,7 @@ public class JackAnalyzer {
             baseTabOffset-=2;
             waitingForNextToken = false;
         }
-        if (startToken.type == TokenType.KEYWORD) {
+        if (startToken.type == Token.TokenType.KEYWORD) {
             if (startToken.value.equals("let")) {
                 checkLetStatementValidity(baseTabOffset);
             } else if (startToken.value.equals("if")) {
@@ -595,24 +582,6 @@ public class JackAnalyzer {
             currentTokenPhrase.clear();
         }
     }
-
-    // private static void printTokens(ArrayList<Token> tokens) {
-    //     System.out.println("Start Tokens:");
-    //     for (Token token : tokens) {
-    //         if (token.type == TokenType.KEYWORD) {
-    //             System.out.println("Keyword: " + token.value);
-    //         } else if (token.type == TokenType.IDENTIFIER) {
-    //             System.out.println("Identifier: " + token.value);
-    //         } else if (token.type == TokenType.STRING_CONSTANT) {
-    //             System.out.println("String Constant: " + token.value);
-    //         } else if (token.type == TokenType.INT_CONSTANT) {
-    //             System.out.println("Integer Constant: " + token.value);
-    //         } else if (token.type == TokenType.SYMBOL) {
-    //             System.out.println("Symbol: " + token.value);
-    //         }
-    //     }
-    //     System.out.println("End Tokens:");
-    // }
 
     private static void secondPass(File inputFile, String outputFileName) throws IOException {
         writer = new BufferedWriter(new FileWriter(outputFileName));
