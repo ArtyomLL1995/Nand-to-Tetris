@@ -91,9 +91,13 @@ public class JackCompiler {
             }
 
             System.out.println(Vars.errorMsg);
+            System.out.println("Jack File / Folder: " + inputFile.getName());
+
+            if (Vars.isValid) {
+                String[] vmArgs = {inputFile.getAbsolutePath()};
+                VMTranslator.main(vmArgs);
+            }
             
-            // String[] vmArgs = {inputFile.getName()};
-            // VMTranslator.main(vmArgs);
         }
     }
 }

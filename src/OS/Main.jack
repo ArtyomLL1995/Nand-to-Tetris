@@ -1,0 +1,11 @@
+class Main {
+
+    function void main() {
+        var String s;
+        var char c;
+        let s = String.new(10);
+        do s.dispose();
+        return;
+    }
+    
+}

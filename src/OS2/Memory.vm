@@ -1,0 +1,183 @@
+
+function Memory.init 0
+push constant 0
+pop static 0
+push constant 2048
+pop static 1
+push constant 0
+push static 1
+add
+push constant 0
+pop temp 0
+pop pointer 1
+push temp 0
+pop that 0
+push constant 1
+push static 1
+add
+push constant 14334
+pop temp 0
+pop pointer 1
+push temp 0
+pop that 0
+push constant 2048
+pop static 2
+push constant 0
+return
+function Memory.peek 0
+push static 0
+push argument 0
+add
+pop pointer 1
+push that 0
+return
+function Memory.poke 0
+push argument 0
+push static 0
+add
+push argument 1
+pop temp 0
+pop pointer 1
+push temp 0
+pop that 0
+push constant 0
+return
+function Memory.alloc 2
+push argument 0
+push constant 2048
+call Memory.getFreeBlock 2
+pop local 0
+push static 1
+push local 0
+push constant 2048
+sub
+push constant 1
+add
+add
+pop pointer 1
+push that 0
+push argument 0
+push constant 2
+add
+sub
+pop local 1
+push local 0
+push constant 2048
+sub
+push constant 1
+add
+push static 1
+add
+push local 1
+pop temp 0
+pop pointer 1
+push temp 0
+pop that 0
+push local 1
+push constant 2
+add
+push static 1
+add
+push constant 9999
+pop temp 0
+pop pointer 1
+push temp 0
+pop that 0
+push local 1
+push constant 3
+add
+push static 1
+add
+push argument 0
+pop temp 0
+pop pointer 1
+push temp 0
+pop that 0
+push local 1
+push constant 2048
+add
+push constant 4
+add
+return
+function Memory.getFreeBlock 0
+push argument 0
+push constant 2
+add
+push static 1
+push argument 1
+push constant 2048
+sub
+push constant 1
+add
+add
+pop pointer 1
+push that 0
+gt
+not
+not
+if-goto Memory_IF_0
+push argument 1
+return
+goto Memory_ELSE_0
+label Memory_IF_0
+push static 1
+push argument 1
+push constant 2048
+sub
+add
+pop pointer 1
+push that 0
+push constant 0
+eq
+not
+if-goto Memory_IF_1
+push constant 1
+call Sys.error 1
+pop temp 0
+goto Memory_ELSE_1
+label Memory_IF_1
+push argument 0
+push static 1
+push argument 1
+push constant 2048
+sub
+add
+pop pointer 1
+push that 0
+call Memory.getFreeBlock 2
+return
+label Memory_ELSE_1
+label Memory_ELSE_0
+push constant 0
+return
+function Memory.deAlloc 0
+push argument 0
+push constant 2048
+sub
+push constant 2
+sub
+push static 1
+add
+push constant 0
+pop temp 0
+pop pointer 1
+push temp 0
+pop that 0
+push static 2
+push constant 2048
+sub
+push static 1
+add
+push argument 0
+push constant 2
+sub
+pop temp 0
+pop pointer 1
+push temp 0
+pop that 0
+push argument 0
+push constant 2
+sub
+pop static 2
+push constant 0
+return

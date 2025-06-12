@@ -1,0 +1,118 @@
+class Math {
+
+    static Array powersOfTwo;
+    static int test;
+    
+    function void init() {
+        let test = 0;
+        let powersOfTwo = Array.new(16);
+        let powersOfTwo[0] = 1;
+        let powersOfTwo[1] = 2;
+        let powersOfTwo[2] = 4;
+        let powersOfTwo[3] = 8;
+        let powersOfTwo[4] = 16;
+        let powersOfTwo[5] = 32;
+        let powersOfTwo[6] = 64;
+        let powersOfTwo[7] = 128;
+        let powersOfTwo[8] = 256;
+        let powersOfTwo[9] = 512;
+        let powersOfTwo[10] = 1024;
+        let powersOfTwo[11] = 2048;
+        let powersOfTwo[12] = 4096;
+        let powersOfTwo[13] = 8192;
+        let powersOfTwo[14] = 16384;
+        let powersOfTwo[15] = 16384+16384;
+        return;
+    }
+
+    function int bit(int y, int n) {
+        return ~((y & powersOfTwo[n]) = 0);
+    }
+
+    // 48 additions
+    function int multiply(int x, int y) {
+        var int j, sum, shiftedX;
+        let sum = 0;
+        let shiftedX = x;
+        let j = 0;
+        while(j < 16) {  
+            if(Math.bit(y, j)) {
+                let sum = sum + shiftedX;
+            }
+            let shiftedX = shiftedX + shiftedX;
+            let j = j + 1;
+        }
+        return sum;
+    }
+   
+    // 15 multiply
+    function int divide(int x, int y) {
+        var int q;
+        let q = Math.calcDivision(Math.abs(x),Math.abs(y));
+        if ((x < 0) = (y < 0)) {
+            return q;
+        } else {
+            return -q;
+        }
+
+    }
+    
+    function int calcDivision(int x, int y) {
+        var int q;
+        if ((x < y) | (y < 0)) {
+            let q = 0;
+        } else {
+            let q = Math.calcDivision(x, y + y);
+            let test = test + 1;
+            if ((x - ((q + q) * y)) < y) {
+                let q = q + q;
+            } else {
+                let q = q + q + 1;
+            }
+        }
+        return q;
+    }
+
+    function int sqrt(int x) {
+        var int i, result, temp;
+        let result = 0;
+        let i = 7;
+        while (i > -1) {
+            let temp = result + powersOfTwo[i];
+            if ((~((temp * temp) > x)) & ((temp * temp) > 0)) {
+                let result = temp;
+            }
+            let i = i - 1;
+        }
+        return result;
+    }
+
+    function int min(int x, int y) {
+        if (x > y) {
+            return y;
+        } else {
+            return x;
+        }
+    }
+
+    function int max(int x, int y) {
+        if (x > y) {
+            return x;
+        } else {
+            return y;
+        }
+    }
+
+    function int abs(int x) {
+        if (x < 0) {
+            return -x;
+        } else {
+            return x;
+        }
+    }
+
+    function Array getPowersOfTwo() {
+        return powersOfTwo;
+    }
+
+}

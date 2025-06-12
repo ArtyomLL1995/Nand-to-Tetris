@@ -1,4 +1,3 @@
-package Assembler;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -93,11 +92,15 @@ public class HackAssembler {
 
      // Method to copy content from .asm file to .hack file
     public static void firstPass(String sourceFile) {
+
+        System.out.println("Source File: " + sourceFile);
+        
         try (BufferedReader reader = new BufferedReader(new FileReader(sourceFile))) {
             
             String line;
             int instructionAddress = 0; 
             while ((line = reader.readLine()) != null) {
+                
                 line = line.trim(); // Remove leading and trailing spaces
                 // Ignore empty lines or comment-only lines
                 if (line.isEmpty() || line.startsWith("//")) {
@@ -220,14 +223,13 @@ public class HackAssembler {
     
 
     public static void main(String[] args) throws Exception {
-
+        
         File inputFile = new File(args[0]);
         if (inputFile.isFile() && args[0].endsWith(".asm")) {
             String outputFileName = args[0].replace(".asm", ".hack");
              // Source .asm file path
-            String sourceFilePath = inputFile.getName();
-            // Destination .hack file path
-             // Call the method to copy the file
+            String sourceFilePath = inputFile.getAbsolutePath();
+
             firstPass(sourceFilePath);
             secondPass(sourceFilePath, outputFileName);
         }

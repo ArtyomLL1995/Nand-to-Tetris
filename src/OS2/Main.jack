@@ -1,0 +1,10 @@
+class Main {
+
+    function void main() {
+        var int i;
+        let i = 5 + 5;
+        do Memory.poke(5000,i);
+        return;
+    }
+    
+}

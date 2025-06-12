@@ -1,0 +1,20 @@
+
+function Sys.init 0
+call Memory.init 0
+pop temp 0
+call Main.main 0
+pop temp 0
+call Sys.halt 0
+pop temp 0
+push constant 0
+return
+function Sys.halt 0
+label Sys_WHILE_0
+push constant 1
+neg
+not
+if-goto Sys_WHILE_0_END
+goto Sys_WHILE_0
+label Sys_WHILE_0_END
+push constant 0
+return

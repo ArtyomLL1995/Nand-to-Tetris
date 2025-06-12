@@ -10,31 +10,76 @@ public class Tokenizer {
 
             char c = input.charAt(i);
 
-            if (c == '/' && i+1 < input.length() && input.charAt(i+1) == '*') {
+            if (
+                c == '/' && i+1 < input.length() && 
+                input.charAt(i+1) == '*'
+            ) {
                 Vars.processingComment = true;
                 i++;
             } 
 
             if (Vars.processingComment == false) {
+
                 if (c == '\"' && processingStringConst == false) {
                     processingStringConst = true;
-                } else if (c != '\"' && processingStringConst == true) {
+                } 
+
+                else if (c != '\"' && processingStringConst == true) {
                     currentToken += c;
-                } else if (c == '\"' && processingStringConst == true) {
-                    Vars.currentTokenPhrase.add(new Token(Token.TokenType.STRING_CONSTANT, currentToken));
+                } 
+                
+                else if (c == '\"' && processingStringConst == true) {
+
+                    Vars.currentTokenPhrase.add(
+                        new Token(
+                            Token.TokenType.STRING_CONSTANT, 
+                            currentToken
+                        )
+                    );
+
                     processingStringConst = false;
                     currentToken = "";
-                    checkCurrentTokenPhraseValidity();
-                } else if (Utils.symbols.contains(String.valueOf(c)) | Character.isWhitespace(c)) {
+                } 
+                
+                else if (
+                    Utils.symbols.contains(String.valueOf(c)) || 
+                    Character.isWhitespace(c)
+                ) {
+
                     prepareToken(currentToken);
+
                     currentToken = "";
+
                     if (Utils.symbols.contains(String.valueOf(c))) {
-                        Vars.currentTokenPhrase.add(new Token(Token.TokenType.SYMBOL, String.valueOf(c)));
+
+                        Vars.currentTokenPhrase.add(
+                            new Token(
+                                Token.TokenType.SYMBOL, 
+                                String.valueOf(c)
+                            )
+                        );
+
                         checkCurrentTokenPhraseValidity();
                     }
-                } else {
-                    if (currentToken.length() > 0 && Character.isDigit(currentToken.charAt(0)) && !Character.isDigit(c)) {
-                        System.out.println("Error: Invalid token: " + currentToken);
+                } 
+                
+                else {
+                    if (
+                        currentToken.length() > 0                       && 
+                        Character.isDigit(currentToken.charAt(0)) && 
+                        !Character.isDigit(c)
+                    ) {
+
+                        Vars.isValid = false;
+
+                        Vars.errorMsg = "Error compiling " + Vars.currentClassName + 
+                        " class. Subroutine " + Vars.subroutineName + "." +
+                        " Error: Invalid token: " + currentToken + c + " Current Token Phase: ";
+
+                        for (Token tkn : Vars.currentTokenPhrase) {
+                            Vars.errorMsg += tkn.value + " ";
+                        }
+                        
                     } else {
                         currentToken += c;
                     }
@@ -59,13 +104,10 @@ public class Tokenizer {
         if (currentToken.length() > 0) {
             if (Utils.keywords.contains(currentToken)) {
                 Vars.currentTokenPhrase.add(new Token(Token.TokenType.KEYWORD, currentToken));
-                checkCurrentTokenPhraseValidity();
             } else if (Character.isDigit(currentToken.charAt(0))) {
                 Vars.currentTokenPhrase.add(new Token(Token.TokenType.INT_CONSTANT, currentToken));
-                checkCurrentTokenPhraseValidity();
             } else {
                 Vars.currentTokenPhrase.add(new Token(Token.TokenType.IDENTIFIER, currentToken));
-                checkCurrentTokenPhraseValidity();
             }
         }
     }

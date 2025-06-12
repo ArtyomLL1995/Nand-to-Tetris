@@ -92,6 +92,13 @@ public class VMTranslator {
 
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(destinationFile))) {
             writer.write(assemblerCodeBuilder.toString());
+            // String[] asmArgs = {"OS2.asm"};
+            // try {
+            //     HackAssembler.main(asmArgs);
+            // } catch (Exception e) {
+            //     System.err.println("Error running HackAssembler: " + e.getMessage());
+            //     e.printStackTrace();
+            // }
         } catch (IOException e) {
             System.err.println("Error Writing File. " + e.getMessage());
             e.printStackTrace();
