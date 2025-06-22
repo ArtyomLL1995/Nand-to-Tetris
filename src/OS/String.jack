@@ -21,9 +21,7 @@ class String {
         var int factor;
         let len = 0;
         let length = 0;             // reset str
-        do Memory.poke(5000, val);
         if (val < 0) {
-            do Memory.poke(5001,999);
             let len = len + 1;      // the addition one is for '-'
             do appendChar(45);      // '-'
             let val = val * (-1);

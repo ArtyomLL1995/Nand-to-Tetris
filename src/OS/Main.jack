@@ -1,10 +1,10 @@
 class Main {
 
     function void main() {
-        var String s;
-        var char c;
-        let s = String.new(10);
-        do s.dispose();
+        var Array arr;
+        var int i;
+        let i = -99 + (500 - -900) + 10;
+        do Output.printInt(i);
         return;
     }
     

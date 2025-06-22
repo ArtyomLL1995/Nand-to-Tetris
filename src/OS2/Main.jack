@@ -1,9 +1,11 @@
 class Main {
 
     function void main() {
-        var int i;
-        let i = 5 + 5;
+        var int i, j;
+        let i = 990 + 9;
         do Memory.poke(5000,i);
+        let j = Memory.alloc(100);
+        do Memory.poke(5001,j);
         return;
     }
     
